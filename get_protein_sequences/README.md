@@ -1,4 +1,4 @@
-# Gene Protein Sequences
+# Get Protein Sequences
 
 This repository contains functions to fetch all isoform protein sequences for given genes from UniProt and NCBI Entrez databases.
 
@@ -19,9 +19,8 @@ No special installation is required. However, you need to have the following Pyt
 
 - `requests`
 - `biopython`
-- `tqdm`
 
 You can install them using `pip`:
 
 ```bash
-pip install requests biopython tqdm
+pip install requests biopython

@@ -9,7 +9,7 @@ This repository contains functions to fetch all isoform protein sequences for gi
 - `get_entrez_isoforms(gene_names, protein_sequences, email)`
   - Fetches protein sequences from NCBI Entrez.
 - `extract_accession(seq_id)`
-  - Extracts accession numbers from sequence IDs.
+  - Extracts accession numbers from sequence IDs for Entrez.
 
 ## Usage
 

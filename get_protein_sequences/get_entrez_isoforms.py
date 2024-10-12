@@ -2,14 +2,14 @@ from Bio import Entrez, SeqIO
 
 def get_entrez_isoforms(gene_name, email):
     """
-    NCBI Entrez를 사용하여 주어진 유전자의 단백질 서열을 가져와 반환합니다.
+    NCBI Entrez를 사용하여 주어진 사람 유전자에 대한 모든 isoform 아미노산 서열을 가져와 protein_dict에 저장합니다.
 
     매개변수:
-    - gene_name: 단백질 서열을 가져올 유전자 이름입니다.
-    - email: NCBI Entrez API를 사용하기 위한 사용자 이메일입니다.
+    - failed_genes: 단백질 서열을 가져올 유전자 이름의 리스트입니다.
+    - protein_dict: 유전자 이름을 키로 하고, 접근번호와 서열의 딕셔너리를 값으로 갖는 딕셔너리입니다.
 
     반환값:
-    - protein_seqs: 접근번호를 키로 하고 서열을 값으로 갖는 딕셔너리입니다.
+    - None (protein_dict를 직접 수정합니다.)
     """
     Entrez.email = email  # Set email for NCBI Entrez API
     protein_seqs = {}

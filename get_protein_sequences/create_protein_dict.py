@@ -23,7 +23,6 @@ def create_protein_dict(genes, get_isoforms_func):
     tqdm.write(f"Genes without isoforms: {len(not_found_genes)}")
     if not_found_genes:
         tqdm.write("Genes without isoforms:")
-        for gene in not_found_genes:
-            tqdm.write(f"  - {gene}")
+        print(not_found_genes)
     
     return protein_dict, not_found_genes

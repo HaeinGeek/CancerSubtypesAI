@@ -16,7 +16,7 @@ This repository contains functions to fetch all isoform protein sequences for gi
 - **`get_uniprot_isoforms(gene_name)`**
   - Fetches isoform protein sequences from UniProt.
 
-- **`get_entrez_isoforms(gene_names, protein_dict, email)`**
+- **`get_entrez_isoforms(gene_names, email)`**
   - Fetches protein sequences from NCBI Entrez.
 
 - **`extract_accession(seq_id)`**

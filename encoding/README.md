@@ -19,7 +19,7 @@ This module provides functionality for classifying and processing genetic mutati
 To classify and process mutations, you can use the `process_mutations` function:
 
 ```python
-from mutation_encoder import process_mutations
+from CancerSubtypesAI.encoding.mutation_encoder import process_mutations
 
 mutations = "L951V L851V L801V P34fs Q58*"
 mutation_type, positions = process_mutations(mutations)

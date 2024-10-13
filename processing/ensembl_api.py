@@ -35,7 +35,7 @@ class EnsemblAPI:
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             with requests.Session() as session:
                 futures = [
-                    executor.submit(fetch_protein_sequence, session, t) 
+                    executor.submit(self.fetch_protein_sequence, session, t) 
                     for t in transcripts
                 ]
                 for future in futures:

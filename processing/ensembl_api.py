@@ -4,8 +4,7 @@ from concurrent.futures import ThreadPoolExecutor
 class EnsemblAPI:
     """Ensembl API를 사용해 단백질 서열을 가져오는 클래스."""
 
-    @staticmethod
-    def fetch_protein_sequence(session, transcript):
+    def fetch_protein_sequence(self, session, transcript):
         """
         개별 전사체의 단백질 서열을 가져옵니다.
         
@@ -36,8 +35,7 @@ class EnsemblAPI:
             print(f"{protein_id}의 단백질 서열을 가져오는 데 실패했습니다.")
             return None
 
-    @staticmethod
-    def get_ensembl_isoforms(gene_name, species='homo_sapiens', max_workers=5):
+    def get_ensembl_isoforms(self, gene_name, species='homo_sapiens', max_workers=5):
         """
         Ensembl REST API를 사용하여 주어진 유전자 이름의 isoform(단백질 서열)을 가져옵니다.
         

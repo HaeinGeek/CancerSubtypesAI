@@ -1,5 +1,5 @@
 from processing.uniprot_api import UniProtAPI
-from processing.pdb_api import PBDAPI
+from processing.pdb_api import PDBAPI
 from processing.ncbi_api import NCBIAPI
 from processing.ensembl_api import EnsemblAPI
 

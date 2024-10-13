@@ -2,7 +2,8 @@ from Bio import Entrez, SeqIO
 
 class NCBIAPI:
     """NCBI API를 사용해 단백질 서열을 가져오는 클래스."""
-
+    
+    @staticmethod
     def get_ncbi_isoforms(gene_name, email):
         """
         NCBI Entrez를 사용하여 주어진 사람 유전자에 대한 모든 isoform 아미노산 서열을 가져옵니다.

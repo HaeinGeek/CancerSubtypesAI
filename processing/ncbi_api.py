@@ -3,8 +3,7 @@ from Bio import Entrez, SeqIO
 class NCBIAPI:
     """NCBI API를 사용해 단백질 서열을 가져오는 클래스."""
 
-    @staticmethod
-    def get_ncbi_isoforms(gene_name, email):
+    def get_ncbi_isoforms(self, gene_name, email):
         """
         NCBI Entrez를 사용하여 주어진 사람 유전자에 대한 모든 isoform 아미노산 서열을 가져옵니다.
 
@@ -56,8 +55,8 @@ class NCBIAPI:
 
         return protein_seqs
 
-    @staticmethod
-    def extract_accession(seq_id):
+    
+    def extract_accession(self, seq_id):
         """
         시퀀스 ID에서 접근 번호를 추출합니다.
 

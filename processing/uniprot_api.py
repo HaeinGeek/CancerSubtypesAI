@@ -2,8 +2,9 @@ import requests
 
 class UniProtAPI:
     """UniProt API를 사용해 단백질 서열을 가져오는 클래스."""
-  
-    def get_uniprot_isoforms(self, gene_name):
+    
+    @staticmethod
+    def get_uniprot_isoforms(gene_name):
         """
         UniProt에서 주어진 유전자에 대한 모든 사람의 isoform 아미노산 서열을 가져옵니다.
     

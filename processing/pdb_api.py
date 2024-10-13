@@ -3,7 +3,7 @@ import json
 
 class PBDAPI:
   """PBD API를 사용해 단백질 서열을 가져오는 클래스."""
-  
+
   def search_pdb_by_gene(self, gene_name):
       """
       주어진 유전자 이름으로 PDB 엔트리를 검색합니다.
@@ -77,8 +77,7 @@ class PBDAPI:
               print(f"응답 내용: {response.text}")
   
       return entries
-    
-
+  
   def get_isoform_sequences(self, entry_entity_pairs):
       """
       엔트리 ID와 엔티티 ID 목록을 사용하여 isoform 서열을 가져옵니다.
@@ -144,7 +143,6 @@ class PBDAPI:
   
       return isoform_sequences
   
-
   def get_pdb_isoforms(self, gene_name):
       """
       유전자 이름을 통해 해당 isoform 서열들을 가져옵니다.

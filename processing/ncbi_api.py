@@ -13,7 +13,6 @@ class NCBIAPI:
         """
         Entrez.email = email  # NCBI Entrez API에 사용할 이메일 설정
         protein_seqs = {}
-        print(f"\n{gene_name} 유전자의 단백질 서열을 가져오는 중...")
         search_term = f"{gene_name}[Gene Name] AND Homo sapiens[Organism]"
 
         try:

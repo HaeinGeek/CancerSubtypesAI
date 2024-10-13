@@ -45,8 +45,9 @@ class EnsemblAPI:
                         isoform_sequences[protein_id] = sequence
 
         return isoform_sequences
-
-    def fetch_protein_sequence(self, session, transcript):
+    
+    @staticmethod
+    def fetch_protein_sequence(session, transcript):
         """
         개별 전사체의 단백질 서열을 가져옵니다.
         """

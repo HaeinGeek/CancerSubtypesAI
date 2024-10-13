@@ -4,7 +4,7 @@ import json
 class PBDAPI:
   """PBD API를 사용해 단백질 서열을 가져오는 클래스."""
 
-  def search_pdb_by_gene(gene_name):
+  def search_pdb_by_gene(self, gene_name):
       """
       주어진 유전자 이름으로 PDB 엔트리를 검색합니다.
       반환값: (entry_id, entity_id)의 리스트

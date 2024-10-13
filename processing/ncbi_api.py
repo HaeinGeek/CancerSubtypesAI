@@ -2,12 +2,12 @@ from Bio import Entrez, SeqIO
 
 class NCBIAPI:
     """NCBI API를 사용해 단백질 서열을 가져오는 클래스."""
-    
+
     @staticmethod
     def get_ncbi_isoforms(gene_name, email):
         """
         NCBI Entrez를 사용하여 주어진 사람 유전자에 대한 모든 isoform 아미노산 서열을 가져옵니다.
-    
+
         매개변수:
         - gene_name (str): 검색할 유전자 이름.
         - email (str): NCBI API 호출 시 사용할 이메일 주소.
@@ -27,7 +27,7 @@ class NCBIAPI:
                 print(f"{gene_name} 유전자에 해당하는 단백질 ID를 찾을 수 없습니다.")
                 return {}
 
-            # 배치 처리: 여러 단백질 ID를 한 번에 가져옵니다.
+            # 여러 단백질 ID를 한 번에 가져옵니다.
             id_str = ','.join(id_list)
             with Entrez.efetch(db="protein", id=id_str, rettype="fasta", retmode="text") as fetch_handle:
                 seq_records = list(SeqIO.parse(fetch_handle, "fasta"))
@@ -38,7 +38,7 @@ class NCBIAPI:
 
             # 시퀀스 처리
             for seq_record in seq_records:
-                accession = NCBIAPI.extract_accession(seq_record.id)
+                accession = NCBIAPI.extract_accession(seq_record.id)  # 정적 메서드 호출
                 if not accession:
                     print(f"접근 번호를 추출할 수 없습니다: {seq_record.id}")
                     continue
@@ -56,13 +56,14 @@ class NCBIAPI:
 
         return protein_seqs
 
+    @staticmethod
     def extract_accession(seq_id):
         """
         시퀀스 ID에서 접근 번호를 추출합니다.
-    
+
         매개변수:
         - seq_id: 시퀀스 ID 문자열입니다.
-    
+
         반환값:
         - 접근 번호 문자열 또는 None
         """

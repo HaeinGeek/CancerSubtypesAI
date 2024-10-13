@@ -1,3 +1,6 @@
+import requests
+from concurrent.futures import ThreadPoolExecutor
+
 class EnsemblAPI:
     """Ensembl API를 사용해 단백질 서열을 가져오는 클래스."""
 

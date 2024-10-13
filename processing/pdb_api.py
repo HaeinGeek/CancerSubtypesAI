@@ -150,7 +150,7 @@ class PBDAPI:
       """
       유전자 이름을 통해 해당 isoform 서열들을 가져옵니다.
       """
-      entries = search_pdb_by_gene(gene_name)
-      sequences = get_isoform_sequences(entries)
+      entries = PBDAPI.search_pdb_by_gene(gene_name)
+      sequences = PBDAPI.get_isoform_sequences(entries)
       print(f"총 {len(sequences)}개의 isoform을 찾았습니다.")
       return sequences

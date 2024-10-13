@@ -152,5 +152,4 @@ class PDBAPI:
         """
         entries = self.search_pdb_by_gene(gene_name)
         sequences = self.get_isoform_sequences(entries)
-        print(f"총 {len(sequences)}개의 isoform을 찾았습니다.")
         return sequences

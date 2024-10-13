@@ -3,7 +3,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 class EnsemblAPI:
     """Ensembl API를 사용해 단백질 서열을 가져오는 클래스."""
-
+    
     def get_ensembl_isoforms(self, gene_name, species='homo_sapiens', max_workers=5):
         """
         Ensembl REST API를 사용하여 주어진 유전자 이름의 isoform(단백질 서열)을 가져옵니다.
@@ -39,26 +39,6 @@ class EnsemblAPI:
                 return {}
     
         # 3. 병렬로 단백질 서열 가져오기
-        def fetch_protein_sequence(self, transcript):
-            if transcript.get('biotype') != 'protein_coding':
-                return None
-            translation = transcript.get('Translation')
-            if not translation:
-                return None
-            
-            protein_id = translation.get('id')
-            if not protein_id:
-                return None
-            
-            ext = f"/sequence/id/{protein_id}?type=protein"
-            seq_response = session.get(server + ext, headers=headers)
-            if seq_response.ok:
-                seq_data = seq_response.json()
-                return protein_id, seq_data.get('seq')
-            else:
-                print(f"{protein_id}의 단백질 서열을 가져오는 데 실패했습니다.")
-                return None
-    
         isoform_sequences = {}
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             with requests.Session() as session:
@@ -70,3 +50,23 @@ class EnsemblAPI:
                         isoform_sequences[protein_id] = sequence
     
         return isoform_sequences
+
+    def fetch_protein_sequence(self, transcript):
+        if transcript.get('biotype') != 'protein_coding':
+            return None
+        translation = transcript.get('Translation')
+        if not translation:
+            return None
+        
+        protein_id = translation.get('id')
+        if not protein_id:
+            return None
+        
+        ext = f"/sequence/id/{protein_id}?type=protein"
+        seq_response = session.get(server + ext, headers=headers)
+        if seq_response.ok:
+            seq_data = seq_response.json()
+            return protein_id, seq_data.get('seq')
+        else:
+            print(f"{protein_id}의 단백질 서열을 가져오는 데 실패했습니다.")
+            return None

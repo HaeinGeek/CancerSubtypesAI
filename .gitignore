@@ -1,1 +1,11 @@
+# 대용량파일
 data/processed/mutant_seq_unique.csv
+
+# OS별 캐시파일
+.DS_Store  # macOS
+Thumbs.db  # Windows
+
+# 특정 확장자 파일
+*.pyc
+*.log
+*.tmp

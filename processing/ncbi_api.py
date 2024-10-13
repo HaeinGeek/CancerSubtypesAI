@@ -37,7 +37,7 @@ class NCBIAPI:
 
             # 시퀀스 처리
             for seq_record in seq_records:
-                accession = NCBIAPI.extract_accession(seq_record.id)  # 정적 메서드 호출
+                accession = self.extract_accession(seq_record.id)  
                 if not accession:
                     print(f"접근 번호를 추출할 수 없습니다: {seq_record.id}")
                     continue

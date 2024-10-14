@@ -1,6 +1,9 @@
 # 대용량파일
 data/processed/mutant_seq_unique.csv
 
+# 파이캐시
+__pycache__/
+
 # OS별 캐시파일
 .DS_Store  # macOS
 Thumbs.db  # Windows

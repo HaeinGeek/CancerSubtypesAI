@@ -240,11 +240,9 @@ def classify_and_aggregate_mutations(mutations):
 
     if len(set(types)) == 1:
         mutation_type = types[0]
-    elif len(set(non_wt_types)) == 1:
-        mutation_type = f'Multiple_{non_wt_types[0]}'
     elif len(non_wt_types) == 0:
         mutation_type = 'WT'
-    else:
+    elif len(set(non_wt_types)) > 1:
         mutation_type = 'Complex_mutation'
 
     return mutation_type

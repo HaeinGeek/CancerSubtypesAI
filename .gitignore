@@ -1,6 +1,9 @@
 # 대용량파일
 data/processed/mutant_seq_unique.csv
 
+# 기타 파일
+/sample_extraiction.ipynb
+
 # 파이캐시
 __pycache__/
 

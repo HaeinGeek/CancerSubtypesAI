@@ -247,3 +247,69 @@ def classify_and_aggregate_mutations(mutations):
         mutation_type = 'Complex_mutation'
 
     return mutation_type
+
+
+
+def calculate_amino_acid_diff(origin, mutant, amino_acid_features):
+    """아미노산 특성 차이를 계산하는 함수"""
+    if origin not in amino_acid_features.index or mutant not in amino_acid_features.index:
+        return None
+    
+    # 계산에 사용할 데이터만 선택
+    numeric_columns = ['Hydrophobicity', 'Polarity', 'Molecular Weight', 'pI', 'Charge']
+    
+    diff = amino_acid_features.loc[mutant, numeric_columns] - amino_acid_features.loc[origin, numeric_columns]
+    return diff.to_dict()
+
+
+
+def process_mutation_features(row, amino_acid_features):
+    """
+    변이의 아미노산 특성을 처리하고, 변화를 누적하며 상태를 결정하는 함수
+    
+    Parameters:
+    row (pd.Series): 변이 정보를 포함하는 데이터프레임의 행
+    amino_acid_features (pd.DataFrame): 아미노산 특성 정보 (index: 단일문자 아미노산명)
+
+    Returns:
+    dict: 처리된 아미노산 특성 변화와 결정된 상태
+    """
+    mutation_type = row['type']
+    origins = row['origin']
+    mutants = row['mutant']
+    
+    feature_changes = {
+        'status': 0,
+        'Hydrophobicity': 0,
+        'Polarity': 0,
+        'Molecular Weight': 0,
+        'pI': 0,
+        'Charge': 0
+    }
+    
+    # if mutation_type == 'WT' or (isinstance(origins, list) and len(origins) == 0):
+    if mutation_type == 'WT':
+        return feature_changes
+    
+    if isinstance(origins, list) and isinstance(mutants, list):
+        for origin, mutant in zip(origins, mutants):
+            diff = calculate_amino_acid_diff(origin, mutant, amino_acid_features)
+            # 계산 불가 -> status = -1
+            if diff is None:
+                feature_changes['status'] = -1
+                return feature_changes
+            # 누적합
+            for key in diff:
+                feature_changes[key] += diff[key]
+    
+    elif isinstance(origins, str) and isinstance(mutants, str):
+        diff = calculate_amino_acid_diff(origins, mutants, amino_acid_features)
+        # 계산 불가 -> status = -1
+        if diff is None:
+            feature_changes['status'] = -1
+            return feature_changes
+        # 누적합
+        for key in diff:
+            feature_changes[key] = diff[key]
+    
+    return feature_changes

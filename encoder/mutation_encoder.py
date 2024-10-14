@@ -99,6 +99,10 @@ def parse_multiple_mutations(mutation_str):
     >>> parse_multiple_mutations("A123T 1499_1500HL>HL Q581*")
     (['A', 'H', 'L', 'Q'], [123, 1499, 1500, 581], ['T', 'H', 'L', '*'])
 
+    >>> parse_multiple_mutations("A123T L123K L123K")
+    Warning: Mutation 'L123K' appears 2 times. Duplicates will be removed.
+    (['A', 'L'], [123, 123], ['T', 'K'])
+
     >>> parse_multiple_mutations("WT")
     ([], [], [])
 
@@ -114,10 +118,20 @@ def parse_multiple_mutations(mutation_str):
 
     # 다중 변이 처리 (공백 기준으로 분리)
     mutations = mutation_str.split()
+
+    # 중복 확인 및 경고 메시지 출력
+    mutation_counts = Counter(mutations)
+    for mutation, count in mutation_counts.items():
+        if count > 1:
+            print(f"Warning: Mutation '{mutation}' appears {count} times. Duplicates will be removed.")
+
+    # 중복 제거
+    unique_mutations = list(mutation_counts.keys())
+
     origins, positions, mutants = [], [], []
 
-    for mutation in mutations:
-        # 연속 위치 변이 처리
+    for mutation in unique_mutations:
+        # 연속 위치 변이 처리 (예: '12_14AA>AG')
         if '_' in mutation and '>' in mutation:
             range_pattern = r'^(\d+)_(\d+)([A-Z*]{2,})>([A-Z*]{2,})$'
             match = re.match(range_pattern, mutation)
@@ -127,14 +141,16 @@ def parse_multiple_mutations(mutation_str):
 
             start_pos, end_pos, orig, mut = match.groups()
 
-            # 각 위치에 맞게 아미노산과 위치 분리
+            # 연속된 위치를 각각 리스트로 변환
             orig_list = list(orig)
             mut_list = list(mut)
             pos_list = list(range(int(start_pos), int(end_pos) + 1))
-
+            
+            # 변이 길이와 위치 길이가 일치하지 않으면 오류 발생
             if len(orig_list) != len(mut_list) or len(orig_list) != len(pos_list):
                 raise ValueError(f"Mismatch in mutation lengths: {mutation}")
 
+            # 결과 리스트에 추가
             origins.extend(orig_list)
             positions.extend(pos_list)
             mutants.extend(mut_list)
@@ -142,6 +158,7 @@ def parse_multiple_mutations(mutation_str):
         else:
             # 단일 변이에 대해 parse_mutation 함수 적용
             orig, pos, mut = parse_mutation(mutation)
+            # 유효한 변이만 리스트에 추가
             if pos and mut:
                 origins.append(orig)
                 positions.append(pos)

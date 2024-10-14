@@ -2,23 +2,176 @@ import re
 import numpy as np
 from collections import Counter
 
+
+# 아미노산 정보 사전 정의
+AMINO_ACID_INFO = {
+    'A': 'Alanine',
+    'R': 'Arginine',
+    'N': 'Asparagine',
+    'D': 'Aspartic Acid',
+    'C': 'Cysteine',
+    'Q': 'Glutamine',
+    'E': 'Glutamic Acid',
+    'G': 'Glycine',
+    'H': 'Histidine',
+    'I': 'Isoleucine',
+    'L': 'Leucine',
+    'K': 'Lysine',
+    'M': 'Methionine',
+    'F': 'Phenylalanine',
+    'P': 'Proline',
+    'S': 'Serine',
+    'T': 'Threonine',
+    'W': 'Tryptophan',
+    'Y': 'Tyrosine',
+    'V': 'Valine',
+    '*': 'Stop Codon'
+}
+
+
+def get_amino_acid_info(amino_acid):
+    """
+    주어진 아미노산 코드에 해당하는 이름을 반환합니다.
+    예외 상황에서는 'Unknown'을 반환합니다.
+
+    Parameters:
+    - amino_acid (str): 아미노산 코드 (단일 문자).
+
+    Returns:
+    - str: 아미노산 이름 또는 'Unknown'.
+    """
+    return AMINO_ACID_INFO.get(amino_acid, 'Unknown')
+
+
+
+def parse_mutation(mutation):
+    """
+    변이 문자열을 원래 아미노산, 위치, 돌연변이 아미노산으로 파싱합니다.
+
+    Parameters:
+    - mutation (str): 변이 문자열 (예: 'A123T', '*363*', 'P34fs').
+
+    Returns:
+    - tuple: (원본 아미노산, 위치 리스트, 변이 아미노산 또는 None).
+
+    Raises:
+    - ValueError: 변이 형식이 올바르지 않은 경우.
+    """
+    if mutation == 'WT':
+        return None, None, None
+    
+    # single deletion (e.g. 490del)
+    position_del_pattern = r'^(\d+)del$'
+    match = re.match(position_del_pattern, mutation)
+
+    if match:
+        pos = int(match.group(1))
+        return None, pos, '-'
+
+    # missense, nonsense, frameshift
+    single_pattern = r'^([A-Z*-]+)(\d+)([A-Z*]?|fs\*\d*|fs|del)?$'
+    match = re.match(single_pattern, mutation)
+
+    if not match:
+        raise ValueError(f"Invalid mutation format: {mutation}")
+
+    orig, pos, mut = match.groups()
+
+    # 'del'이 변이 아미노산인 경우 '-'로 반환
+    if mut == 'del':
+        mut = '-'
+
+    return orig, int(pos), mut if mut else None
+
+
+
+def parse_multiple_mutations(mutation_str):
+    """
+    여러 변이 정보를 파싱하여 원본 아미노산과 변이 아미노산을 리스트로 반환합니다.
+
+    Parameters:
+    - mutation_str (str): 여러 변이가 포함된 문자열 (예: 'A123T 1499_1500HL>HL').
+
+    Returns:
+    - tuple: ([원본 아미노산 리스트], [변이 위치 리스트], [변이 아미노산 리스트]).
+
+    Examples:
+    >>> parse_multiple_mutations("A123T 1499_1500HL>HL Q581*")
+    (['A', 'H', 'L', 'Q'], [123, 1499, 1500, 581], ['T', 'H', 'L', '*'])
+
+    >>> parse_multiple_mutations("WT")
+    ([], [], [])
+
+    >>> parse_multiple_mutations("P34fs")
+    (['P'], [34], ['fs'])
+
+    >>> parse_multiple_mutations("12_14AA>AG")
+    (['A', 'A', 'A'], [12, 13, 14], ['A', 'A', 'G'])
+    """
+    # 'WT' 처리
+    if mutation_str == 'WT':
+        return [], [], []
+
+    # 다중 변이 처리 (공백 기준으로 분리)
+    mutations = mutation_str.split()
+    origins, positions, mutants = [], [], []
+
+    for mutation in mutations:
+        # 연속 위치 변이 처리
+        if '_' in mutation and '>' in mutation:
+            range_pattern = r'^(\d+)_(\d+)([A-Z*]{2,})>([A-Z*]{2,})$'
+            match = re.match(range_pattern, mutation)
+
+            if not match:
+                raise ValueError(f"Invalid mutation format: {mutation}")
+
+            start_pos, end_pos, orig, mut = match.groups()
+
+            # 각 위치에 맞게 아미노산과 위치 분리
+            orig_list = list(orig)
+            mut_list = list(mut)
+            pos_list = list(range(int(start_pos), int(end_pos) + 1))
+
+            if len(orig_list) != len(mut_list) or len(orig_list) != len(pos_list):
+                raise ValueError(f"Mismatch in mutation lengths: {mutation}")
+
+            origins.extend(orig_list)
+            positions.extend(pos_list)
+            mutants.extend(mut_list)
+
+        else:
+            # 단일 변이에 대해 parse_mutation 함수 적용
+            orig, pos, mut = parse_mutation(mutation)
+            if pos and mut:
+                origins.append(orig)
+                positions.append(pos)
+                mutants.append(mut)
+
+    return origins, positions, mutants
+
+
+
+# 정규 표현식 패턴 컴파일
+patterns = [
+    # Nonsense 변이
+    (re.compile(r'^([A-Z])(\d+)\*$'), 'Nonsense', lambda m: [int(m.group(2))]),
+    # Missense 변이
+    (re.compile(r'^([A-Z])(\d+)([A-Z])$'), 'Missense', lambda m: [int(m.group(2))] if m.group(1) != m.group(3) else ('Silent_Missense', [int(m.group(2))])),
+    # Silent Nonsense 변이
+    (re.compile(r'^\*(\d+)\*$'), 'Silent_Nonsense', lambda m: [int(m.group(1))]),
+    # Frameshift 변이 (삽입)
+    (re.compile(r'^([A-Z]+)(\d+)fs(.*)$'), 'Frameshift_insertion', lambda m: [int(m.group(2))]),
+    # Frameshift 변이 (단일 아미노산 또는 '-'로 시작)
+    (re.compile(r'^([A-Z\-]?)(\d+)fs(.*)$'), None, lambda m: ('Frameshift_deletion', [int(m.group(2))]) if m.group(1) == '-' else ('Frameshift_insertion', [int(m.group(2))])),
+    # 두 개의 연속된 아미노산 변이
+    (re.compile(r'^(\d+)_(\d+)([A-Z]{2})>([A-Z]{2})$'), None, lambda m: ('Silent_Multiple', [int(m.group(1)), int(m.group(2))]) if m.group(3) == m.group(4) else ('Multiple_Missense', [int(m.group(1)), int(m.group(2))])),
+]
+
+
+
 def classify_single_mutation(mutation):
     """단일 변이를 분석하고 변이 유형 및 위치를 반환하는 함수"""
-    # 정규 표현식을 미리 컴파일하여 재사용성 및 효율성 향상
-    patterns = [
-        # Nonsense 변이
-        (re.compile(r'^([A-Z])(\d+)\*$'), 'Nonsense', lambda m: [int(m.group(2))]),
-        # Missense 변이
-        (re.compile(r'^([A-Z])(\d+)([A-Z])$'), 'Missense', lambda m: [int(m.group(2))] if m.group(1) != m.group(3) else ('Silent_Missense', [int(m.group(2))])),
-        # Silent Nonsense 변이
-        (re.compile(r'^\*(\d+)\*$'), 'Silent_Nonsense', lambda m: [int(m.group(1))]),
-        # Frameshift 변이 (삽입)
-        (re.compile(r'^([A-Z]+)(\d+)fs(.*)$'), 'Frameshift_insertion', lambda m: [int(m.group(2))]),
-        # Frameshift 변이 (단일 아미노산 또는 '-'로 시작)
-        (re.compile(r'^([A-Z\-]?)(\d+)fs(.*)$'), None, lambda m: ('Frameshift_deletion', [int(m.group(2))]) if m.group(1) == '-' else ('Frameshift_insertion', [int(m.group(2))])),
-        # 두 개의 연속된 아미노산 변이
-        (re.compile(r'^(\d+)_(\d+)([A-Z]{2})>([A-Z]{2})$'), None, lambda m: ('Silent_Multiple', [int(m.group(1)), int(m.group(2))]) if m.group(3) == m.group(4) else ('Multiple_Missense', [int(m.group(1)), int(m.group(2))])),
-    ]
+
     if mutation == 'WT':
         return ('WT', np.nan)
     
@@ -38,20 +191,30 @@ def classify_single_mutation(mutation):
     # 그 외의 경우
     return ('Unknown', np.nan)
 
-def process_mutations(mutations):
-    """여러 변이를 처리하고 변이 종류와 위치를 추출하는 함수"""
+
+
+def classify_and_aggregate_mutations(mutations):
+    """
+    여러 변이를 처리하고 변이 유형을 분류한 후, 전체 변이 유형을 결정합니다.
+
+    Parameters:
+    - mutations (str): 여러 변이가 포함된 문자열 (예: 'A123T Q581*').
+
+    Returns:
+    - str: 전체 변이 유형.
+    """
     mutation_list = mutations.split()
     
-    # 중복 확인 및 경고 메시지 생성
+    # 중복 확인 및 경고 메시지 출력
     mutation_counts = Counter(mutation_list)
     for mutation, count in mutation_counts.items():
         if count > 1:
             print(f"Warning: Mutation '{mutation}' appears {count} times. Duplicates will be removed.")
-    
+
     # 중복 제거
     unique_mutations = list(mutation_counts.keys())
     
-    # 각 변이를 처리하고 변이 종류와 위치를 추출
+    # 변이 유형 분류
     encoded_mutations = [classify_single_mutation(m) for m in unique_mutations]
     
     # 전체 변이 유형 결정
@@ -66,17 +229,5 @@ def process_mutations(mutations):
         mutation_type = 'WT'
     else:
         mutation_type = 'Complex_mutation'
-    
-    # 모든 위치를 수집하고 정렬 (np.nan이 아닌 경우만)
-    positions = []
-    for _, pos_list in encoded_mutations:
-        if isinstance(pos_list, list):
-            positions.extend(pos_list)
-    
-    # 빈 리스트로 처리
-    if not positions:
-        positions = []
-    else:
-        positions = sorted(set(positions))
-    
-    return mutation_type, positions
+
+    return mutation_type

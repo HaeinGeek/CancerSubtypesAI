@@ -17,13 +17,12 @@ The module recognizes and processes the following mutation patterns:
 
 | Type                           | Pattern (Regex)                                  | Example            |
 |--------------------------------|--------------------------------------------------|--------------------|
-| Single Amino Acid Mutation (Missense) | `^([A-Z*-]+)(\d+)([A-Z*])?$`              | `A123T`            |
-| Frameshift Mutation            | `^([A-Z*-]+)?(\d+)fs(\*\d*)?$`                   | `P34fs`            |
-| Frameshift Deletion Mutation   | `^-?([A-Z*-]?)(\d+)fs(\*\d*)?$`                  | `-62fs`            |
+| Single Amino Acid Mutation (Missense) | `^([A-Z])(\d+)([A-Z])$`                   | `A123T`            |
+| Nonsense Mutation              | `^([A-Z])(\d+)\*$`                               | `Q581*`            |
+| Frameshift Mutation            | `^([A-Z]+)(\d+)fs(.*)$`                          | `P34fs`            |
+| Frameshift Deletion Mutation   | `^([A-Z\-]?)(\d+)fs(.*)$`                        | `-62fs`            |
 | Silent Nonsense Mutation       | `^\*(\d+)\*$`                                    | `*363*`            |
-| Position-Based Deletion        | `^(\d+)del$`                                     | `490del`           |
-| Amino Acid-Based Deletion      | `^([A-Z*-]+)(\d+)del$`                           | `R649del`          |
-| Consecutive Position Mutation  | `^(\d+)_(\d+)([A-Z*-]+)>([A-Z*-]+)$`             | `49_50WE>*K`       |
+| Consecutive Position Mutation  | `^(\d+)_(\d+)([A-Z]{2})>([A-Z]{2})$`             | `49_50WE>*K`       |
 
 ## Mutation Classification
 
@@ -37,7 +36,6 @@ The module classifies mutations into the following types:
 | Silent_Nonsense        | No change in stop codon                               | `*363*`           |
 | Frameshift_insertion   | Insertion causing frameshift                          | `P34fs`           |
 | Frameshift_deletion    | Deletion causing frameshift                           | `-62fs`           |
-| Multiple_{mutation_name} | Same mutation type occurring at different positions | `A123T A456T A789T` |
 | Complex_mutation       | Combination of different mutation types               | `A123T Q581* P34fs` |
 | WT                     | Wild type (no mutation)                               | `WT`              |
 
@@ -53,6 +51,14 @@ The module classifies mutations into the following types:
 
 When processing mutations, this module treats duplicate mutations as a single mutation. For example, if the input string contains `A123K A123K A123K`, it will be processed as if it were a single `A123K` mutation. This approach helps to handle potential input errors where the same mutation might be accidentally repeated.
 
+## Mutation Type Determination Logic
+
+The `classify_and_aggregate_mutations` function uses the following logic to determine the overall mutation type:
+
+1. If all mutations are of the same type (including WT), that type is returned.
+2. If all mutations are WT, 'WT' is returned.
+3. If there are multiple non-WT mutation types, 'Complex_mutation' is returned.
+
 ## Example Usage
 
 To classify and process mutations, you can use the `classify_and_aggregate_mutations` function:
@@ -60,7 +66,7 @@ To classify and process mutations, you can use the `classify_and_aggregate_mutat
 ```python
 from mutation_encoder import classify_and_aggregate_mutations
 
-mutations = "A123T 1499_1500HL>HL Q581*"
+mutations = "A123T Q581*"
 mutation_type = classify_and_aggregate_mutations(mutations)
 
 print("Overall Mutation Type:", mutation_type)  # Output: Complex_mutation
@@ -71,12 +77,12 @@ To parse multiple mutations:
 ```python
 from mutation_encoder import parse_multiple_mutations
 
-mutations = "A123T 1499_1500HL>HL Q581*"
+mutations = "A123T Q581*"
 origins, positions, mutants = parse_multiple_mutations(mutations)
 
-print("Original Amino Acids:", origins)  # Output: ['A', 'H', 'L', 'Q']
-print("Positions:", positions)  # Output: [123, 1499, 1500, 581]
-print("Mutated Amino Acids:", mutants)  # Output: ['T', 'H', 'L', '*']
+print("Original Amino Acids:", origins)  # Output: ['A', 'Q']
+print("Positions:", positions)  # Output: [123, 581]
+print("Mutated Amino Acids:", mutants)  # Output: ['T', '*']
 ```
 
 ## Note

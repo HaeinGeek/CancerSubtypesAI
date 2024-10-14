@@ -181,8 +181,9 @@ patterns = [
     # Frameshift 변이 (단일 아미노산 또는 '-'로 시작)
     (re.compile(r'^([A-Z\-]?)(\d+)fs(.*)$'), None, lambda m: ('Frameshift_deletion', [int(m.group(2))]) if m.group(1) == '-' else ('Frameshift_insertion', [int(m.group(2))])),
     # 두 개의 연속된 아미노산 변이
-    (re.compile(r'^(\d+)_(\d+)([A-Z]{2})>([A-Z]{2})$'), None, lambda m: ('Silent_Multiple', [int(m.group(1)), int(m.group(2))]) if m.group(3) == m.group(4) else ('Multiple_Missense', [int(m.group(1)), int(m.group(2))])),
-]
+    (re.compile(r'^(\d+)_(\d+)([A-Z]+)>([A-Z]+)$'), None,
+        lambda m: ('Silent_Missense', [int(m.group(1)), int(m.group(2))]) if m.group(3) == m.group(4) else ('Missense', [int(m.group(1)), int(m.group(2))]))
+        ]
 
 
 

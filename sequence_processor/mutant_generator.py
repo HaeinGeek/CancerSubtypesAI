@@ -3,6 +3,32 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
+def parse_mutation(mutation):
+    """
+    돌연변이 문자열을 원래 아미노산, 위치, 돌연변이 아미노산으로 파싱합니다.
+
+    Parameters:
+    - mutation (str): 돌연변이 정보가 포함된 문자열 (예: 'A123T', 'Q58*').
+
+    Returns:
+    - tuple: (원래 아미노산, 위치(int), 돌연변이 아미노산).
+
+    Raises:
+    - ValueError: 유효하지 않은 돌연변이 형식일 경우 예외를 발생시킵니다.
+
+    Example:
+    >>> parse_mutation("A123T")
+    ('A', 123, 'T')
+    """
+    pattern = r'^([A-Z])(\d+)([A-Z*]|fs\*\d*|fs)$'
+    match = re.match(pattern, mutation)
+    if not match:
+        raise ValueError(f"Invalid mutation format: {mutation}")
+
+    orig, pos, mut = match.groups()
+    return orig, int(pos), mut
+
+
 def select_longest_isoform(isoform_sequences, db_name):
     """
     주어진 데이터베이스 기준으로 가장 긴 단백질 isoform 서열을 선택합니다.
@@ -43,30 +69,6 @@ def select_longest_isoform(isoform_sequences, db_name):
 
     return max(selected_sequences.items(), key=lambda x: len(x[1]))[1]
 
-def parse_mutation(mutation):
-    """
-    돌연변이 문자열을 원래 아미노산, 위치, 돌연변이 아미노산으로 파싱합니다.
-
-    Parameters:
-    - mutation (str): 돌연변이 정보가 포함된 문자열 (예: 'A123T', 'Q58*').
-
-    Returns:
-    - tuple: (원래 아미노산, 위치(int), 돌연변이 아미노산).
-
-    Raises:
-    - ValueError: 유효하지 않은 돌연변이 형식일 경우 예외를 발생시킵니다.
-
-    Example:
-    >>> parse_mutation("A123T")
-    ('A', 123, 'T')
-    """
-    pattern = r'^([A-Z])(\d+)([A-Z*]|fs\*\d*|fs)$'
-    match = re.match(pattern, mutation)
-    if not match:
-        raise ValueError(f"Invalid mutation format: {mutation}")
-
-    orig, pos, mut = match.groups()
-    return orig, int(pos), mut
 
 def mutate_sequence(wt_sequence, mutation_str):
     """

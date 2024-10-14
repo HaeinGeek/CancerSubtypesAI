@@ -6,7 +6,11 @@ import pandas as pd
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(project_root)
 
-from encoder.mutation_encoder import classify_and_aggregate_mutations, parse_multiple_mutations
+from encoder.mutation_encoder import (
+    classify_and_aggregate_mutations, 
+    parse_multiple_mutations,
+    process_mutation_features
+)
 
 def main():
     import os
@@ -48,24 +52,24 @@ def main():
     mutation_encoding_df['mut_num'] = mutation_encoding_df['position'].apply(lambda x: len(x) if isinstance(x, list) else 0)
 
 
+    # 아미노산 특성 차이 계산 (누적합)
+    # 계산에 사용된 특성: ['Hydrophobicity', 'Polarity', 'Molecular Weight', 'pI', 'Charge']
+    mutation_encoding_df['feature_changes'] = mutation_encoding_df.apply(
+        lambda row: process_mutation_features(row, amino_acid_features), 
+        axis=1
+    )
 
+    # 아미노산 특성 차이를 개별 열로 분리
+    feature_columns = ['status', 'Hydrophobicity', 'Polarity', 'Molecular Weight', 'pI', 'Charge']
+    for col in feature_columns:
+        mutation_encoding_df[col] = mutation_encoding_df['feature_changes'].apply(lambda x: x[col])
 
-
-
-
-    # 각 변이 특성 차이  (구현 필요)
-
-
-
-
-
-
-
-
+    # 'feature_changes' 열 제거
+    mutation_encoding_df = mutation_encoding_df.drop('feature_changes', axis=1)
 
     # 결과 CSV로 저장
     mutation_encoding_df.to_csv(output_filepath, index=False)
-    print("Encoding completed successfully with optimized multi-mutation handling.")
+    print("Encoding completed successfully with amino acid feature differences.")
 
 if __name__ == "__main__":
     main()

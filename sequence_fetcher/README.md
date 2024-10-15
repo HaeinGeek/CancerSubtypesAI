@@ -63,7 +63,3 @@ For detailed information on the APIs used, please refer to the following documen
 - An email address is required when using the NCBI API.
 - When processing large amounts of data, please check the usage policies of each database.
 - Internet connection is required, and processing time may vary depending on the number of genes being searched and network conditions.
-
-## License
-
-This project is licensed under the [License Name].

@@ -10,6 +10,14 @@ The Sequence Processor module is a part of the CancerSubtypesAI project, designe
 - Load and manage protein sequence data from various databases
 - Optimize memory usage through dynamic loading of protein databases
 
+## Dependencies
+
+- pandas
+- numpy
+- tqdm
+
+Ensure these libraries are installed before using the Sequence Processor module.
+
 ## Components
 
 ### 1. Mutant Generator (`mutant_generator.py`)
@@ -70,11 +78,3 @@ mutations_df.to_csv('path/to/processed_mutations.csv', index=False)
 - The mutation string format should be in the form of 'A123T' or 'Q58*' for single mutations, or a comma-separated list for multiple mutations.
 - The module handles various mutation types, including substitutions, truncations (*), and frameshifts (fs).
 - Memory optimization is achieved by loading protein databases only when needed.
-
-## Dependencies
-
-- pandas
-- numpy
-- tqdm
-
-Ensure these libraries are installed before using the Sequence Processor module.

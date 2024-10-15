@@ -59,7 +59,7 @@ The `classify_and_aggregate_mutations` function uses the following logic to dete
 2. If all mutations are WT, 'WT' is returned.
 3. If there are multiple non-WT mutation types, 'Complex_mutation' is returned.
 
-## Example Usage
+## Usage
 
 To classify and process mutations, you can use the `classify_and_aggregate_mutations` function:
 

@@ -2,7 +2,7 @@
 
 The Mutation Encoder module of CancerSubtypesAI is a comprehensive tool designed for parsing, classifying, and processing genetic mutations commonly found in cancer research. It identifies various mutation types such as missense, nonsense, frameshift, and more, while extracting mutation information from mutation strings and calculating amino acid property changes.
 
-## Key Features
+## Features
 
 - Parses mutation strings to extract original amino acid, position, and mutated amino acid.
 - Classifies mutations into various types (e.g., Missense, Nonsense, Frameshift, Silent).
@@ -11,6 +11,12 @@ The Mutation Encoder module of CancerSubtypesAI is a comprehensive tool designed
 - Provides amino acid information lookup.
 - Handles duplicate mutations by treating them as a single mutation.
 - Calculates changes in amino acid properties for mutations.
+
+## Dependencies
+
+- numpy
+
+Ensure these libraries are installed before using the Sequence Processor module.
 
 ## Mutation Patterns
 

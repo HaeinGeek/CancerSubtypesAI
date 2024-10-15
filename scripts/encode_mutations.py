@@ -31,7 +31,7 @@ def main():
 
     # 데이터 로드
     train_df = pd.read_csv(input_filepath)
-    amino_acid_features = pd.read_csv(amino_acid_filepath).set_index('Amino Acid')
+    amino_acid_features = pd.read_csv(amino_acid_filepath).set_index('amino acid')
 
     # 데이터 변환 및 중복 제거
     melted_df = train_df.melt(id_vars=['ID', 'SUBCLASS'], var_name='gene', value_name='mutation_str')
@@ -60,7 +60,7 @@ def main():
     )
 
     # 아미노산 특성 차이를 개별 열로 분리
-    feature_columns = ['status', 'Hydrophobicity', 'Polarity', 'Molecular Weight', 'pI', 'Charge']
+    feature_columns = ['status', 'hydrophobicity', 'polarity', 'mw', 'pI', 'charge']
     for col in feature_columns:
         mutation_encoding_df[col] = mutation_encoding_df['feature_changes'].apply(lambda x: x[col])
 

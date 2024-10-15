@@ -1,4 +1,4 @@
-Amino Acid,Name,Hydrophobicity,Polarity,Molecular Weight,pI,Charge
+amino acid,name,hydrophobicity,polarity,mw,pI,charge
 A,Alanine,1.8,0,89.1,6.0,0
 R,Arginine,-4.5,1,174.2,10.8,1
 N,Asparagine,-3.5,1,132.1,5.4,0

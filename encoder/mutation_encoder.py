@@ -256,7 +256,7 @@ def calculate_amino_acid_diff(origin, mutant, amino_acid_features):
         return None
     
     # 계산에 사용할 데이터만 선택
-    numeric_columns = ['Hydrophobicity', 'Polarity', 'Molecular Weight', 'pI', 'Charge']
+    numeric_columns = ['hydrophobicity', 'polarity', 'mw', 'pI', 'charge']
     
     diff = amino_acid_features.loc[mutant, numeric_columns] - amino_acid_features.loc[origin, numeric_columns]
     return diff.to_dict()
@@ -280,11 +280,11 @@ def process_mutation_features(row, amino_acid_features):
     
     feature_changes = {
         'status': 0,
-        'Hydrophobicity': 0,
-        'Polarity': 0,
-        'Molecular Weight': 0,
+        'hydrophobicity': 0,
+        'polarity': 0,
+        'mw': 0,
         'pI': 0,
-        'Charge': 0
+        'charge': 0
     }
     
     # if mutation_type == 'WT' or (isinstance(origins, list) and len(origins) == 0):

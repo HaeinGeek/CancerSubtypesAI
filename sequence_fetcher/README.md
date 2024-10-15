@@ -8,13 +8,14 @@ The Sequence Fetcher module of CancerSubtypesAI is a tool designed to retrieve p
 - Extract isoform sequence information based on gene names
 - Save search results to CSV files
 
-## Installation
+## Dependencies
 
-Install the required libraries for this project:
+- biopython
+- pandas
+- requests
+- tqdm
 
-```bash
-pip install pandas requests biopython tqdm
-```
+Ensure these libraries are installed before using the Sequence Processor module.
 
 ## Usage
 

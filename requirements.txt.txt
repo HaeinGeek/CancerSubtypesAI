@@ -1,5 +1,0 @@
-biopython
-requests
-pandas
-numpy
-tqdm

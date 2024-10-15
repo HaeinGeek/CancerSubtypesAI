@@ -176,14 +176,16 @@ patterns = [
     (re.compile(r'^([A-Z])(\d+)([A-Z])$'), 'Missense', lambda m: [int(m.group(2))] if m.group(1) != m.group(3) else ('Silent_Missense', [int(m.group(2))])),
     # Silent Nonsense 변이
     (re.compile(r'^\*(\d+)\*$'), 'Silent_Nonsense', lambda m: [int(m.group(1))]),
-    # Frameshift 변이 (삽입)
-    (re.compile(r'^([A-Z]+)(\d+)fs(.*)$'), 'Frameshift_insertion', lambda m: [int(m.group(2))]),
-    # Frameshift 변이 (단일 아미노산 또는 '-'로 시작)
-    (re.compile(r'^([A-Z\-]?)(\d+)fs(.*)$'), None, lambda m: ('Frameshift_deletion', [int(m.group(2))]) if m.group(1) == '-' else ('Frameshift_insertion', [int(m.group(2))])),
+    # Frameshift 변이
+    (re.compile(r'^([A-Z\-]?)(\d+)fs(.*)$'), 'Frameshift', lambda m: [int(m.group(2))]),
     # 두 개의 연속된 아미노산 변이
-    (re.compile(r'^(\d+)_(\d+)([A-Z]+)>([A-Z]+)$'), None,
-        lambda m: ('Silent_Missense', [int(m.group(1)), int(m.group(2))]) if m.group(3) == m.group(4) else ('Missense', [int(m.group(1)), int(m.group(2))]))
-        ]
+    (re.compile(r'^(\d+)_(\d+)([A-Z]{2})>([A-Z\*]{2})$'), None,
+        lambda m: ('Complex_mutation', [int(m.group(1)), int(m.group(2))]) if '*' in m.group(4) and m.group(4) != '**' else
+                  ('Missense', [int(m.group(1)), int(m.group(2))]) if '*' not in m.group(4) else
+                  ('Nonsense', [int(m.group(1)), int(m.group(2))])),
+    # Deletion 변이
+    (re.compile(r'^([A-Z]?)(\d+)del$'), 'Deletion', lambda m: [int(m.group(2))]),
+]
 
 
 

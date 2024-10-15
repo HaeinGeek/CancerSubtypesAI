@@ -1,6 +1,6 @@
-# Mutation Encoder
+# CancerSubtypesAI Mutation Encoder
 
-This module provides functionality for parsing, classifying, and processing genetic mutations commonly found in cancer research. It identifies various mutation types such as missense, nonsense, frameshift, and more, while extracting mutation information from mutation strings.
+The Mutation Encoder module of CancerSubtypesAI is a comprehensive tool designed for parsing, classifying, and processing genetic mutations commonly found in cancer research. It identifies various mutation types such as missense, nonsense, frameshift, and more, while extracting mutation information from mutation strings and calculating amino acid property changes.
 
 ## Key Features
 
@@ -10,6 +10,7 @@ This module provides functionality for parsing, classifying, and processing gene
 - Supports the analysis of consecutive position mutations.
 - Provides amino acid information lookup.
 - Handles duplicate mutations by treating them as a single mutation.
+- Calculates changes in amino acid properties for mutations.
 
 ## Mutation Patterns
 
@@ -23,6 +24,7 @@ The module recognizes and processes the following mutation patterns:
 | Frameshift Deletion Mutation   | `^([A-Z\-]?)(\d+)fs(.*)$`                        | `-62fs`            |
 | Silent Nonsense Mutation       | `^\*(\d+)\*$`                                    | `*363*`            |
 | Consecutive Position Mutation  | `^(\d+)_(\d+)([A-Z]{2})>([A-Z]{2})$`             | `49_50WE>*K`       |
+| Single Deletion                | `^(\d+)del$`                                     | `490del`           |
 
 ## Mutation Classification
 
@@ -34,8 +36,8 @@ The module classifies mutations into the following types:
 | Nonsense               | Mutation to stop codon                                | `Q581*`           |
 | Silent_Missense        | No amino acid change                                  | `L145L`           |
 | Silent_Nonsense        | No change in stop codon                               | `*363*`           |
-| Frameshift_insertion   | Insertion causing frameshift                          | `P34fs`           |
-| Frameshift_deletion    | Deletion causing frameshift                           | `-62fs`           |
+| Frameshift             | Insertion or deletion causing frameshift              | `P34fs`           |
+| Deletion               | Deletion of an amino acid                             | `490del`          |
 | Complex_mutation       | Combination of different mutation types               | `A123T Q581* P34fs` |
 | WT                     | Wild type (no mutation)                               | `WT`              |
 
@@ -46,6 +48,8 @@ The module classifies mutations into the following types:
 - `parse_multiple_mutations(mutation_str)`: Parses a string containing multiple mutations and returns lists of original amino acids, positions, and mutated amino acids.
 - `classify_single_mutation(mutation)`: Classifies a single mutation and returns the mutation type and position(s).
 - `classify_and_aggregate_mutations(mutations)`: Processes multiple mutations, classifies them, and determines an overall mutation type.
+- `calculate_amino_acid_diff(origin, mutant, amino_acid_features)`: Calculates the difference in amino acid properties between the original and mutated amino acids.
+- `process_mutation_features(row, amino_acid_features)`: Processes mutation features and calculates cumulative changes in amino acid properties.
 
 ## Handling Duplicate Mutations
 
@@ -59,9 +63,21 @@ The `classify_and_aggregate_mutations` function uses the following logic to dete
 2. If all mutations are WT, 'WT' is returned.
 3. If there are multiple non-WT mutation types, 'Complex_mutation' is returned.
 
+## Amino Acid Property Changes
+
+The module can calculate changes in amino acid properties for mutations, including:
+
+- Hydrophobicity
+- Polarity
+- Molecular Weight (MW)
+- Isoelectric Point (pI)
+- Charge
+
+These changes are calculated and accumulated for multiple mutations.
+
 ## Usage
 
-To classify and process mutations, you can use the `classify_and_aggregate_mutations` function:
+To classify and process mutations:
 
 ```python
 from mutation_encoder import classify_and_aggregate_mutations
@@ -85,6 +101,20 @@ print("Positions:", positions)  # Output: [123, 581]
 print("Mutated Amino Acids:", mutants)  # Output: ['T', '*']
 ```
 
+To process mutation features:
+
+```python
+import pandas as pd
+from mutation_encoder import process_mutation_features
+
+# Assuming you have a DataFrame with mutation information and amino acid features
+row = pd.Series({'type': 'Missense', 'origin': 'A', 'mutant': 'T'})
+amino_acid_features = pd.DataFrame(...)  # Your amino acid features data
+
+feature_changes = process_mutation_features(row, amino_acid_features)
+print("Feature Changes:", feature_changes)
+```
+
 ## Note
 
-This module includes comprehensive error handling and provides warnings for duplicate mutations. It's designed to handle a wide range of mutation formats commonly encountered in genetic research.
+This module includes comprehensive error handling and provides warnings for duplicate mutations. It's designed to handle a wide range of mutation formats commonly encountered in genetic research and provides detailed analysis of amino acid property changes resulting from mutations.

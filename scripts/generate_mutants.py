@@ -33,7 +33,7 @@ def main():
     print(f"Mutated sequences saved to {output_filename}")
 
     notfound_filename = f'data/processed/mutant_seq_not_found.csv'
-    mutant_seq_not_found = unique_mutations_df.loc[unique_mutations_df.sequence.isna(),['gene', 'mutation_str']]
+    mutant_seq_not_found = unique_mutations_df.loc[unique_mutations_df.wt_seq.isna(),['gene', 'mutation_str']]
     mutant_seq_not_found.to_csv(notfound_filename, index=False)
     print(f"Sequences not found saved to {notfound_filename}")
 

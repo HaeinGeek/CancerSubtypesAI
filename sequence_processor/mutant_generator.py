@@ -1,33 +1,8 @@
 import re
+from collections import Counter
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
-
-def parse_mutation(mutation):
-    """
-    돌연변이 문자열을 원래 아미노산, 위치, 돌연변이 아미노산으로 파싱합니다.
-
-    Parameters:
-    - mutation (str): 돌연변이 정보가 포함된 문자열 (예: 'A123T', 'Q58*').
-
-    Returns:
-    - tuple: (원래 아미노산, 위치(int), 돌연변이 아미노산).
-
-    Raises:
-    - ValueError: 유효하지 않은 돌연변이 형식일 경우 예외를 발생시킵니다.
-
-    Example:
-    >>> parse_mutation("A123T")
-    ('A', 123, 'T')
-    """
-    pattern = r'^([A-Z])(\d+)([A-Z*]|fs\*\d*|fs)$'
-    match = re.match(pattern, mutation)
-    if not match:
-        raise ValueError(f"Invalid mutation format: {mutation}")
-
-    orig, pos, mut = match.groups()
-    return orig, int(pos), mut
-
 
 def select_longest_isoform(isoform_sequences, db_name):
     """
@@ -69,6 +44,59 @@ def select_longest_isoform(isoform_sequences, db_name):
 
     return max(selected_sequences.items(), key=lambda x: len(x[1]))[1]
 
+def parse_single_mutation(mutation):
+    """
+    단일 돌연변이 문자열을 원래 아미노산, 위치, 돌연변이 아미노산으로 파싱합니다.
+
+    Parameters:
+    - mutation (str): 돌연변이 정보가 포함된 문자열 (예: 'A123T', 'Q58*').
+
+    Returns:
+    - tuple: (원래 아미노산, 위치(int), 돌연변이 아미노산).
+
+    Raises:
+    - ValueError: 유효하지 않은 돌연변이 형식일 경우 예외를 발생시킵니다.
+
+    Example:
+    >>> parse_single_mutation("A123T")
+    ('A', 123, 'T')
+    """
+    patterns = [
+        r'^([A-Z*])(\d+)([A-Z*])$',  # 일반적인 아미노산 또는 종결코돈 치환
+        r'^([A-Z])(\d+)(del)$',    # 아미노산 삭제
+        r'^([A-Z])(\d+)(fs)$',    # 아미노산 시퀀스로 시작하는 프레임시프트
+        r'^(-)(\d+)(fs)$',        # 음수 기호로 시작하는 프레임시프트
+    ]
+    
+    for pattern in patterns:
+        match = re.match(pattern, mutation)
+        if match:
+            orig, pos, mut = match.groups()
+            return orig, int(pos), mut
+    
+    raise ValueError(f"Invalid mutation format: {mutation}")
+
+def parse_multiple_mutation(mutation):
+    """
+    연속 위치 돌연변이 문자열을 파싱합니다.
+    """
+    range_pattern = r'^(\d+)_(\d+)([A-Z]{2,})>([A-Z*]{1,})$'  # 12_13AL>A*
+    range_match = re.match(range_pattern, mutation)
+    
+    if range_match:
+        start_pos, end_pos, orig, mut = range_match.groups()
+        return orig, int(start_pos), int(end_pos), mut
+    
+    fs_pattern = r'^([A-Z]{2,})(\d+)(fs)$'   # AKL23fs
+    fs_match = re.match(fs_pattern, mutation)
+
+    if fs_match:
+        orig, end_pos, mut = fs_match.groups()
+        start_pos = len(orig) - 1
+        return orig, int(start_pos), int(end_pos), mut
+
+
+    raise ValueError(f"Invalid mutation format: {mutation}")
 
 def mutate_sequence(wt_sequence, mutation_str):
     """
@@ -85,28 +113,64 @@ def mutate_sequence(wt_sequence, mutation_str):
     - ValueError: 돌연변이 위치가 서열 범위를 초과하거나, 원래 아미노산이 일치하지 않는 경우 예외를 발생시킵니다.
     """
     mutations = re.split(r'\s+|,', mutation_str.strip())
-    sequence = list(wt_sequence)
+    mutations = [m.strip() for m in mutations if m.strip()]  # 공백 제거 및 빈 문자열 필터링
+    
+    # 중복 확인 및 경고 메시지 출력
+    mutation_counts = Counter(mutations)
+    for mutation, count in mutation_counts.items():
+        if count > 1:
+            # 중복 제거
+            mutations = list(set(mutations))
+            print(f"Warning: Mutation '{mutation}' appears {count} times. Duplicates will be removed.")
 
+    sequence = list(wt_sequence)
     for mutation in mutations:
         if not mutation:
             continue
-        orig, pos, mut = parse_mutation(mutation)
+        try:
+            # 단일 변이 처리 시도 
+            orig, pos, mut = parse_single_mutation(mutation)
 
-        if pos - 1 >= len(sequence):
-            raise ValueError(f"Position {pos} is out of range in the sequence.")
+            if pos - 1 >= len(sequence):
+                raise ValueError(f"Position {pos} is out of range in the sequence.")
 
-        if sequence[pos - 1] != orig:
-            raise ValueError(f"Position {pos} in WT sequence does not match the original amino acid {orig}")
+            if orig != '-' and sequence[pos - 1] != orig:
+                raise ValueError(f"Position {pos} in WT sequence does not match the original amino acid {orig}")
 
-        if mut == '*':
-            sequence = sequence[:pos - 1]  # 종결 코돈 이후 서열 제거
-            sequence.append('*')
-            break
-        elif mut.startswith('fs'):
-            sequence = sequence[:pos - 1]  # 프레임시프트 변이 이후 서열 제거
-            break
-        else:
-            sequence[pos - 1] = mut
+            if mut == '*' or mut == 'fs':
+                # 전사 시작 위치 이전의 프레임시프트 처리
+                if orig == '-':
+                    sequence = list(mut)
+                else:
+                    sequence = sequence[:pos - 1] + [mut[0]]
+                break  # 종결 코돈 또는 프레임시프트 이후의 변이는 무시
+
+            else:
+                sequence[pos - 1] = mut
+
+        except ValueError:
+            # 단일 위치 변이 처리 실패 시 연속 위치 변이 처리 시도
+            try:
+                orig, start_pos, end_pos, mut = parse_multiple_mutation(mutation)
+                
+                if end_pos > len(sequence):
+                    raise ValueError(f"Position {end_pos} is out of range in the sequence.")
+                
+                if ''.join(sequence[start_pos-1:end_pos]) != orig:
+                    raise ValueError(f"Positions {start_pos}-{end_pos} in WT sequence do not match the original amino acids {orig}")
+                
+                if mut[0] == '*':
+                    sequence = sequence[:start_pos-1] + ['*']
+                    break  # 종결 코돈 이후의 변이는 무시
+                elif mut[-1] == '*':
+                    sequence = sequence[:end_pos-1] + ['*']
+                    break  # 종결 코돈 이후의 변이는 무시
+                else:
+                    sequence[start_pos-1:end_pos] = list(mut)
+            
+            except ValueError:
+                # 두 가지 파싱 방법 모두 실패한 경우
+                raise ValueError(f"Invalid mutation format: {mutation}")
 
     return ''.join(sequence)
 
@@ -153,9 +217,6 @@ def add_mutated_sequences(unique_mutations_df, protein_dict, db_name):
 
         # 1. 변이가 있는 경우 처리 (mutation_str != 'WT')
         if mutation_str != 'WT':
-            longest_mutated_seq = None  # 가장 긴 변이 서열 추적
-            max_mutated_length = 0
-
             for isoform_id, wt_seq in isoform_sequences.items():
                 try:
                     mutated_seq = mutate_sequence(wt_seq, mutation_str)

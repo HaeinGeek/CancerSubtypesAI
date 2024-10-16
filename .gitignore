@@ -1,6 +1,9 @@
 # 대용량파일
 data/processed/mutant_seq_unique.csv
 
+# 기타파일
+data/processed/mutant_seq_test.csv
+
 # 파이캐시
 __pycache__/
 
@@ -13,6 +16,7 @@ Thumbs.db  # Windows
 *.log
 *.tmp
 *.ipynb
+*.xlsx
 
 # 포함할 파일
 !ipynb/single_aa_embedding_model.ipynb

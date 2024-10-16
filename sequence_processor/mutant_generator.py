@@ -124,23 +124,29 @@ def add_mutated_sequences(unique_mutations_df, protein_dict, db_name):
     - pd.DataFrame: 'sequence' 열이 추가된 데이터프레임.
     
     Notes:
-    - 'sequence' 열이 없으면 NaN 값으로 초기화됩니다.
-    - 'sequence'가 NaN인 경우에만 서열이 추가됩니다.
-    - 변이 정보를 먼저 처리해 변이 서열을 저장하고,
-      변이와 일치하는 isoform의 원본 서열 중 가장 긴 것을 WT 서열로 저장합니다.
+    - 'isoform_id', 'wt_seq', 'mut_seq' 열이 없으면 NaN 값으로 초기화됩니다.
+    - 'mut_seq' 열 값이 NaN인 경우에만 서열이 추가됩니다.
+    - 변이가 있는 경우 가장 긴 변이 서열과 해당 isoform id, 원본 서열을 저장합니다.
+    - 변이가 없는 경우(WT) 가장 긴 원본(WT) 서열과 해당 isoform id를 저장합니다.
     """
-    # 'sequence' 열이 없으면 NaN 값으로 초기화
-    if 'sequence' not in unique_mutations_df.columns:
-        unique_mutations_df['sequence'] = np.nan
+    # 'isoform_id', 'wt_seq', 'mut_seq' 열이 없으면 NaN으로 초기화
+    for col in ['isoform_id', 'wt_seq', 'mut_seq']:
+        if col not in unique_mutations_df.columns:
+            unique_mutations_df[col] = np.nan
 
     # NaN인 행만 필터링 (이미 처리된 서열은 건너뜀)
-    nan_rows = unique_mutations_df[unique_mutations_df['sequence'].isna()]
+    nan_rows = unique_mutations_df[unique_mutations_df['mut_seq'].isna()]
 
     print("돌연변이 서열을 생성 중입니다...")
     for row in tqdm(nan_rows.itertuples(index=True), total=len(nan_rows), desc="변이 처리", unit="건"):
         gene = row.gene
         mutation_str = row.mutation_str
         isoform_sequences = protein_dict.get(gene, {})
+
+        longest_isoform_id = None
+        longest_wt_seq = None
+        longest_mut_seq = None
+        max_length = 0
 
         if not isoform_sequences:
             continue  # isoform이 없는 경우 넘어감
@@ -155,31 +161,29 @@ def add_mutated_sequences(unique_mutations_df, protein_dict, db_name):
                     mutated_seq = mutate_sequence(wt_seq, mutation_str)
 
                     # 가장 긴 변이 서열을 추적
-                    if len(mutated_seq) > max_mutated_length:
-                        longest_mutated_seq = mutated_seq
-                        max_mutated_length = len(mutated_seq)
+                    if len(mutated_seq) > max_length:
+                        longest_isoform_id = isoform_id
+                        longest_wt_seq = wt_seq
+                        longest_mut_seq = mutated_seq
+                        max_length = len(mutated_seq)
 
                 except ValueError as e:
                     print(f"Error in gene {gene} with mutation {mutation_str}: {e}")
                     continue
 
-            # 변이 서열이 존재하면 저장하고 다음 행으로 넘어감
-            if longest_mutated_seq:
-                unique_mutations_df.at[row.Index, 'sequence'] = longest_mutated_seq
-                continue  # 다음 행 처리
-
         # 2. WT 처리 (mutation_str == 'WT')
         # 가장 긴 원본(WT) 서열을 찾기
-        longest_wt_seq = None  # 가장 긴 원본 서열 추적
-        max_wt_length = 0
+        if mutation_str == 'WT':
+            for isoform_id, wt_seq in isoform_sequences.items():
+                if len(wt_seq) > max_length:
+                    longest_isoform_id = isoform_id
+                    longest_wt_seq = wt_seq
+                    longest_mut_seq = None
+                    max_length = len(wt_seq)
 
-        for isoform_id, wt_seq in isoform_sequences.items():
-            if len(wt_seq) > max_wt_length:
-                longest_wt_seq = wt_seq
-                max_wt_length = len(wt_seq)
-
-        # 가장 긴 원본(WT) 서열을 저장
-        if longest_wt_seq:
-            unique_mutations_df.at[row.Index, 'sequence'] = longest_wt_seq
+        # isoform_id, wt_seq, mut_seq를 저장
+        unique_mutations_df.at[row.Index, 'isoform_id'] = longest_isoform_id
+        unique_mutations_df.at[row.Index, 'wt_seq'] = longest_wt_seq
+        unique_mutations_df.at[row.Index, 'mut_seq'] = longest_mut_seq
 
     return unique_mutations_df

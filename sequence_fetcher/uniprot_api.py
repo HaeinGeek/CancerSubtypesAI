@@ -5,7 +5,7 @@ class UniProtAPI:
     
     def get_uniprot_isoforms(self, gene_name):
         """
-        UniProt에서 주어진 유전자에 대한 모든 사람의 isoform 아미노산 서열을 가져옵니다.
+        UniProt에서 주어진 유전자에 대해 사람의 모든 isoform 아미노산 서열을 가져옵니다.
     
         매개변수:
         - gene_name: 유전자 이름 (예: 'TP53')

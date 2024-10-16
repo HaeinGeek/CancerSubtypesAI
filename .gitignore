@@ -13,3 +13,6 @@ Thumbs.db  # Windows
 *.log
 *.tmp
 *.ipynb
+
+# 포함할 파일
+!ipynb/single_aa_embedding_model.ipynb

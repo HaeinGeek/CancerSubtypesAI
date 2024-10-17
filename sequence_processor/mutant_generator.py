@@ -199,7 +199,9 @@ def add_mutated_sequences(unique_mutations_df, protein_dict, db_name):
             unique_mutations_df[col] = np.nan
 
     # NaN인 행만 필터링 (이미 처리된 서열은 건너뜀)
-    nan_rows = unique_mutations_df[unique_mutations_df['mut_seq'].isna()]
+    nan_rows = unique_mutations_df[
+        unique_mutations_df['mut_seq'].isna() | unique_mutations_df['wt_seq'].isna() | unique_mutations_df['isoform_id'].isna()
+    ]
 
     print("돌연변이 서열을 생성 중입니다...")
     for row in tqdm(nan_rows.itertuples(index=True), total=len(nan_rows), desc="변이 처리", unit="건"):

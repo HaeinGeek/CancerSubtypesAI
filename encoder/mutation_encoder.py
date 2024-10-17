@@ -261,7 +261,7 @@ def calculate_amino_acid_diff(origin, mutant, amino_acid_features):
     numeric_columns = ['hydrophobicity', 'polarity', 'mw', 'pI', 'charge']
     
     diff = amino_acid_features.loc[mutant, numeric_columns] - amino_acid_features.loc[origin, numeric_columns]
-    return diff.to_dict()
+    return diff
 
 
 
@@ -282,36 +282,31 @@ def process_mutation_features(row, amino_acid_features):
     
     feature_changes = {
         'status': 0,
-        'hydrophobicity': 0,
-        'polarity': 0,
-        'mw': 0,
-        'pI': 0,
-        'charge': 0
+        'hydrophobicity': [],
+        'polarity': [],
+        'mw': [],
+        'pI': [],
+        'charge': []
     }
     
-    # if mutation_type == 'WT' or (isinstance(origins, list) and len(origins) == 0):
     if mutation_type == 'WT':
         return feature_changes
     
     if isinstance(origins, list) and isinstance(mutants, list):
         for origin, mutant in zip(origins, mutants):
             diff = calculate_amino_acid_diff(origin, mutant, amino_acid_features)
-            # 계산 불가 -> status = 1
             if diff is None:
                 feature_changes['status'] = 1
                 return feature_changes
-            # 누적합
-            for key in diff:
-                feature_changes[key] += diff[key]
+            for key in diff.index:
+                feature_changes[key].append(diff[key])
     
     elif isinstance(origins, str) and isinstance(mutants, str):
         diff = calculate_amino_acid_diff(origins, mutants, amino_acid_features)
-        # 계산 불가 -> status = 1
         if diff is None:
             feature_changes['status'] = 1
             return feature_changes
-        # 누적합
-        for key in diff:
-            feature_changes[key] = diff[key]
+        for key in diff.index:
+            feature_changes[key].append(diff[key])
     
     return feature_changes

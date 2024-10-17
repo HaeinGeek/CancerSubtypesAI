@@ -1,6 +1,7 @@
 import sys
 import os
 import pandas as pd
+import numpy as np
 
 # Add the project root directory to sys.path
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
@@ -52,17 +53,21 @@ def main():
     mutation_encoding_df['mut_num'] = mutation_encoding_df['position'].apply(lambda x: len(x) if isinstance(x, list) else 0)
 
 
-    # 아미노산 특성 차이 계산 (누적합)
-    # 계산에 사용된 특성: ['Hydrophobicity', 'Polarity', 'Molecular Weight', 'pI', 'Charge']
+    # 아미노산 특성 차이 계산
     mutation_encoding_df['feature_changes'] = mutation_encoding_df.apply(
         lambda row: process_mutation_features(row, amino_acid_features), 
         axis=1
     )
 
-    # 아미노산 특성 차이를 개별 열로 분리
-    feature_columns = ['status', 'hydrophobicity', 'polarity', 'mw', 'pI', 'charge']
+    # 아미노산 특성 차이를 개별 열로 분리하고 통계 계산
+    feature_columns = ['hydrophobicity', 'polarity', 'mw', 'pI', 'charge']
     for col in feature_columns:
-        mutation_encoding_df[col] = mutation_encoding_df['feature_changes'].apply(lambda x: x[col])
+        mutation_encoding_df[f'{col}_min'] = mutation_encoding_df['feature_changes'].apply(lambda x: np.min(x[col]) if x[col] else np.nan)
+        mutation_encoding_df[f'{col}_max'] = mutation_encoding_df['feature_changes'].apply(lambda x: np.max(x[col]) if x[col] else np.nan)
+        mutation_encoding_df[f'{col}_mean'] = mutation_encoding_df['feature_changes'].apply(lambda x: np.mean(x[col]) if x[col] else np.nan)
+        mutation_encoding_df[f'{col}_std'] = mutation_encoding_df['feature_changes'].apply(lambda x: np.std(x[col]) if len(x[col]) > 1 else 0)
+
+    mutation_encoding_df['status'] = mutation_encoding_df['feature_changes'].apply(lambda x: x['status'])
 
     # 'feature_changes' 열 제거
     mutation_encoding_df = mutation_encoding_df.drop('feature_changes', axis=1)

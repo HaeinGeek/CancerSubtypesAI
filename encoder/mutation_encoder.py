@@ -296,9 +296,9 @@ def process_mutation_features(row, amino_acid_features):
     if isinstance(origins, list) and isinstance(mutants, list):
         for origin, mutant in zip(origins, mutants):
             diff = calculate_amino_acid_diff(origin, mutant, amino_acid_features)
-            # 계산 불가 -> status = -1
+            # 계산 불가 -> status = 1
             if diff is None:
-                feature_changes['status'] = -1
+                feature_changes['status'] = 1
                 return feature_changes
             # 누적합
             for key in diff:
@@ -306,9 +306,9 @@ def process_mutation_features(row, amino_acid_features):
     
     elif isinstance(origins, str) and isinstance(mutants, str):
         diff = calculate_amino_acid_diff(origins, mutants, amino_acid_features)
-        # 계산 불가 -> status = -1
+        # 계산 불가 -> status = 1
         if diff is None:
-            feature_changes['status'] = -1
+            feature_changes['status'] = 1
             return feature_changes
         # 누적합
         for key in diff:

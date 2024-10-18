@@ -3,8 +3,8 @@ from tqdm import tqdm
 import logging
 from transformers import BertTokenizer, BertModel
 import torch
-import zipfile
-import io
+# import zipfile
+# import io
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)

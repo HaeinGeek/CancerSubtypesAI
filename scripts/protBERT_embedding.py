@@ -1,7 +1,10 @@
 from embedding.protbert_embedding import (
     extract_data_for_embedding,
     load_protbert,
-    process_and_save_embeddings
+    extract_full_embedding,
+    process_embeddings,
+    save_embeddings_to_zip,
+    load_compressed_embeddings
 )
 
 from utils.utils import(
@@ -26,21 +29,20 @@ def main():
     # ProtBERT tokenizer & model 로딩
     tokenizer, model, device = load_protbert()
     
-
+    # wt 임베딩 계산
     logger.info("Starting processing of wild type sequences")
-    process_and_save_embeddings(wt_prot, 
-                                tokenizer, 
-                                model, 
-                                device,
-                                'data/processed/wt_embedding_full.pt')
-    
+    wt_embeddings = process_embeddings(wt_prot, tokenizer, model, device)
+
+    # mut 임베딩 계산
     logger.info("Starting processing of mutant sequences")
-    process_and_save_embeddings(mut_prot, 
-                                tokenizer, 
-                                model, 
-                                device, 
-                                'data/processed/mut_embedding_full.pt',
-                                is_mutant=True)
+    mut_embeddings = process_embeddings(mut_prot, tokenizer, model, device, is_mutant=True)
+    
+    # 임베딩 압축파일 저장
+    logger.info("Saving wild type embeddings")
+    save_embeddings_to_zip(wt_embeddings, 'data/processed/wt_embedding_full.pt')
+    
+    logger.info("Saving mutant embeddings")
+    save_embeddings_to_zip(mut_embeddings, 'data/processed/mut_embedding_full.pt')
 
     logger.info("Embedding extraction process completed")
 

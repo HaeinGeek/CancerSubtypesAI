@@ -6,8 +6,6 @@ import logging
 from transformers import BertTokenizer, BertModel
 import h5py
 import os
-# import zipfile
-# import io
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)

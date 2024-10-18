@@ -28,11 +28,11 @@ def main():
         unique_mutations_df = add_mutated_sequences(unique_mutations_df, protein_dict, db_name)
 
     # 결과 저장
-    output_filename = f'data/processed/mutant_seq_unique.csv'
+    output_filename = f'data/processed/train/mutant_seq_unique.csv'
     unique_mutations_df.to_csv(output_filename, index=False)
     print(f"Mutated sequences saved to {output_filename}")
 
-    notfound_filename = f'data/processed/mutant_seq_not_found.csv'
+    notfound_filename = f'data/processed/train/mutant_seq_not_found.csv'
     mutant_seq_not_found = unique_mutations_df.loc[unique_mutations_df.wt_seq.isna(),['gene', 'mutation_str']]
     mutant_seq_not_found.to_csv(notfound_filename, index=False)
     print(f"Sequences not found saved to {notfound_filename}")

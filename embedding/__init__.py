@@ -1,7 +1,7 @@
 from embedding.protbert_embedding import (
     extract_data_for_embedding,
     load_protbert,
-    extract_full_embedding,
+    extract_embeddings,
     process_embeddings,
     save_embeddings_to_zip,
     load_compressed_embeddings
@@ -10,7 +10,7 @@ from embedding.protbert_embedding import (
 __all__ = [
     'extract_data_for_embedding',
     'load_protbert',
-    'extract_full_embedding',
+    'extract_embeddings',
     'process_embeddings',
     "save_embeddings_to_zip",
     'load_compressed_embeddings'

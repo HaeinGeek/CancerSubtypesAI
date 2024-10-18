@@ -32,9 +32,64 @@ def load_protbert():
     
     return tokenizer, model, device
 
-def extract_full_embedding(sequence, tokenizer, model, device):
-    try:
-        inputs = tokenizer(sequence, 
+# def extract_full_embedding(sequence, tokenizer, model, device):
+#     try:
+#         inputs = tokenizer(sequence, 
+#                            return_tensors='pt', 
+#                            max_length=1024,
+#                            padding='max_length', 
+#                            truncation=True)
+        
+#         inputs = {k: v.to(device) for k, v in inputs.items()}
+        
+#         with torch.no_grad():
+#             outputs = model(**inputs)
+#             last_hidden_states = outputs.last_hidden_state
+#             attention_mask = inputs['attention_mask']
+        
+#         return {
+#             'last_hidden_states': last_hidden_states.squeeze(0).cpu(),
+#             'attention_mask': attention_mask.squeeze(0).cpu()
+#         }
+#     except Exception as e:
+#         logger.error(f"Error in extract_full_embedding: {str(e)}")
+#         logger.error(f"Sequence causing error: {sequence}")
+#         raise
+
+# def process_embeddings(df, tokenizer, model, device, is_mutant=False):
+#     embedding_dict = {}
+#     skipped_count = 0
+    
+#     for idx, row in tqdm(df.iterrows(), total=len(df), desc="Processing sequences"):
+#         try:
+#             isoform_id = row['isoform_id']
+#             sequence = row['mut_seq'] if is_mutant else row['wt_seq']
+#             embedding = extract_full_embedding(sequence, tokenizer, model, device)
+            
+#             if is_mutant:
+#                 mut_str = row['mutation_str']
+#                 if isoform_id not in embedding_dict:
+#                     embedding_dict[isoform_id] = {}
+#                 embedding_dict[isoform_id][mut_str] = embedding
+#             else:
+#                 embedding_dict[isoform_id] = embedding
+                
+#         except Exception as e:
+#             logger.error(f"Error processing row {idx}: {str(e)}")
+#             skipped_count += 1
+    
+#     logger.info(f"Skipped {skipped_count} rows due to errors or NaN values")
+
+#     return embedding_dict
+
+import torch
+from tqdm import tqdm
+
+def extract_embeddings(sequences, tokenizer, model, device, batch_size=32):
+    embeddings = []
+    for i in range(0, len(sequences), batch_size):
+        batch = sequences[i:i+batch_size]
+        inputs = tokenizer(batch, 
                            return_tensors='pt', 
                            max_length=1024,
                            padding='max_length', 
@@ -47,38 +102,49 @@ def extract_full_embedding(sequence, tokenizer, model, device):
             last_hidden_states = outputs.last_hidden_state
             attention_mask = inputs['attention_mask']
         
-        return {
-            'last_hidden_states': last_hidden_states.squeeze(0).cpu(),
-            'attention_mask': attention_mask.squeeze(0).cpu()
-        }
-    except Exception as e:
-        logger.error(f"Error in extract_full_embedding: {str(e)}")
-        logger.error(f"Sequence causing error: {sequence}")
-        raise
+        embeddings.extend([
+            {
+                'last_hidden_states': lhs.cpu(),
+                'attention_mask': am.cpu()
+            }
+            for lhs, am in zip(last_hidden_states, attention_mask)
+        ])
+    
+    return embeddings
 
-def process_embeddings(df, tokenizer, model, device, is_mutant=False):
+def process_embeddings(df, tokenizer, model, device, is_mutant=False, batch_size=32):
     embedding_dict = {}
     skipped_count = 0
     
-    for idx, row in tqdm(df.iterrows(), total=len(df), desc="Processing sequences"):
-        try:
-            isoform_id = row['isoform_id']
-            sequence = row['mut_seq'] if is_mutant else row['wt_seq']
-            embedding = extract_full_embedding(sequence, tokenizer, model, device)
-            
-            if is_mutant:
-                mut_str = row['mutation_str']
-                if isoform_id not in embedding_dict:
-                    embedding_dict[isoform_id] = {}
-                embedding_dict[isoform_id][mut_str] = embedding
-            else:
-                embedding_dict[isoform_id] = embedding
-                
-        except Exception as e:
-            logger.error(f"Error processing row {idx}: {str(e)}")
-            skipped_count += 1
+    sequences = df['mut_seq' if is_mutant else 'wt_seq'].tolist()
+    isoform_ids = df['isoform_id'].tolist()
     
-    logger.info(f"Skipped {skipped_count} rows due to errors or NaN values")
+    if is_mutant:
+        mutation_strs = df['mutation_str'].tolist()
+    
+    for i in tqdm(range(0, len(sequences), batch_size), desc="Processing batches"):
+        batch_sequences = sequences[i:i+batch_size]
+        batch_isoform_ids = isoform_ids[i:i+batch_size]
+        
+        try:
+            batch_embeddings = extract_embeddings(batch_sequences, tokenizer, model, device, batch_size)
+            
+            for j, embedding in enumerate(batch_embeddings):
+                isoform_id = batch_isoform_ids[j]
+                
+                if is_mutant:
+                    mut_str = mutation_strs[i+j]
+                    if isoform_id not in embedding_dict:
+                        embedding_dict[isoform_id] = {}
+                    embedding_dict[isoform_id][mut_str] = embedding
+                else:
+                    embedding_dict[isoform_id] = embedding
+                    
+        except Exception as e:
+            logger.error(f"Error processing batch starting at index {i}: {str(e)}")
+            skipped_count += len(batch_sequences)
+    
+    logger.info(f"Skipped {skipped_count} sequences due to errors")
 
     return embedding_dict
 

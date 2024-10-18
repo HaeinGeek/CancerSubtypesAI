@@ -165,58 +165,6 @@ def extract_embeddings(sequences, tokenizer, model, device, pooling_strategy='me
     pooled_embeddings = apply_pooling(last_hidden_states, attention_mask, pooling_strategy)
     return pooled_embeddings
 
-# def process_embeddings(df, tokenizer, model, device, output_file_base, is_mutant=False, pooling_strategy='mean_max_cls', batch_size=32):
-#     sequences = df['mut_seq' if is_mutant else 'wt_seq'].tolist()
-#     isoform_ids = df['isoform_id'].tolist()
-
-#     if is_mutant:
-#         mutation_strs = df['mutation_str'].tolist()
-
-#     total_size = 0  # 저장된 데이터의 총 크기 추적
-#     file_index = 1  # 파일 인덱스
-#     output_file = f"{output_file_base}_{file_index}.h5"
-#     h5f = h5py.File(output_file, 'a')
-
-#     for i in tqdm(range(0, len(sequences), batch_size), desc="Processing batches"):
-#         batch_sequences = sequences[i:i+batch_size]
-#         batch_isoform_ids = isoform_ids[i:i+batch_size]
-
-#         if is_mutant:
-#             batch_mutation_strs = mutation_strs[i:i+batch_size]
-
-#         try:
-#             batch_embeddings = extract_embeddings(
-#                 batch_sequences, tokenizer, model, device, pooling_strategy
-#             )
-#             batch_embeddings = np.array(batch_embeddings)
-#             batch_size_in_bytes = batch_embeddings.nbytes
-
-#             # 파일 크기 제한 체크
-#             if total_size + batch_size_in_bytes > 10 * 1024 ** 3:  # 10GB 초과 시 새로운 파일 생성
-#                 h5f.close()
-#                 file_index += 1
-#                 output_file = f"{output_file_base}_{file_index}.h5"
-#                 h5f = h5py.File(output_file, 'a')
-#                 total_size = 0
-
-#             # HDF5 파일에 저장
-#             for j, embedding in enumerate(batch_embeddings):
-#                 if is_mutant:
-#                     key = f"{batch_isoform_ids[j]}_{batch_mutation_strs[j]}"
-#                 else:
-#                     key = batch_isoform_ids[j]
-#                 h5f.create_dataset(key, data=embedding, compression='gzip')
-#                 total_size += embedding.nbytes
-
-#         except Exception as e:
-#             logger.error(f"Error processing batch starting at index {i}: {str(e)}")
-
-#     h5f.close()
-#     logger.info(f"Embeddings saved to {output_file}")
-    
-#     h5f.close()
-#     logger.info(f"Embeddings saved to {output_file}")
-
 def process_embeddings(df, tokenizer, model, device, output_file_base, is_mutant=False, pooling_strategy='mean_max_cls', batch_size=32):
     sequences = df['mut_seq' if is_mutant else 'wt_seq'].tolist()
     isoform_ids = df['isoform_id'].tolist()
@@ -254,7 +202,8 @@ def process_embeddings(df, tokenizer, model, device, output_file_base, is_mutant
             temp_file_size = os.path.getsize('temp.h5')
 
             # 파일 크기 제한 체크
-            if total_size + temp_file_size > 100 * 1024 ** 2:  # 100MB 초과 시 새로운 파일 생성
+            if total_size + temp_file_size > 10 * 1024 ** 3:  # 10GB 초과 시 새로운 파일 생성
+            # if total_size + temp_file_size > 100 * 1024 ** 2:  # 100MB 초과 시 새로운 파일 생성
                 h5f.close()
                 os.remove('temp.h5')  # 임시 파일 삭제
                 file_index += 1

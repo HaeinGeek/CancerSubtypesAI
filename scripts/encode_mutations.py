@@ -19,7 +19,7 @@ def main():
     # 입력 및 출력 파일 경로 설정
     input_filepath = 'data/train.csv'
     amino_acid_filepath = 'data/amino_acid_features.csv'
-    output_filepath = 'data/processed/train_mutation_encoding.csv'
+    output_filepath = 'data/processed/train/train_mutation_encoding.csv'
 
     # 파일 존재 여부 확인
     if not os.path.exists(input_filepath):

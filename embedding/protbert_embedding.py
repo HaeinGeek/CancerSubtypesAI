@@ -32,9 +32,11 @@ def load_protbert():
     
     return tokenizer, model, device
 
-# def extract_full_embedding(sequence, tokenizer, model, device):
-#     try:
-#         inputs = tokenizer(sequence, 
+# def extract_embeddings(sequences, tokenizer, model, device, batch_size=32):
+#     embeddings = []
+#     for i in range(0, len(sequences), batch_size):
+#         batch = sequences[i:i+batch_size]
+#         inputs = tokenizer(batch, 
 #                            return_tensors='pt', 
 #                            max_length=1024,
 #                            padding='max_length', 
@@ -47,117 +49,150 @@ def load_protbert():
 #             last_hidden_states = outputs.last_hidden_state
 #             attention_mask = inputs['attention_mask']
         
-#         return {
-#             'last_hidden_states': last_hidden_states.squeeze(0).cpu(),
-#             'attention_mask': attention_mask.squeeze(0).cpu()
-#         }
-#     except Exception as e:
-#         logger.error(f"Error in extract_full_embedding: {str(e)}")
-#         logger.error(f"Sequence causing error: {sequence}")
-#         raise
+#         embeddings.extend([
+#             {
+#                 'last_hidden_states': lhs.cpu(),
+#                 'attention_mask': am.cpu()
+#             }
+#             for lhs, am in zip(last_hidden_states, attention_mask)
+#         ])
+    
+#     return embeddings
 
-# def process_embeddings(df, tokenizer, model, device, is_mutant=False):
+# def process_embeddings(df, tokenizer, model, device, is_mutant=False, batch_size=32):
 #     embedding_dict = {}
 #     skipped_count = 0
     
-#     for idx, row in tqdm(df.iterrows(), total=len(df), desc="Processing sequences"):
-#         try:
-#             isoform_id = row['isoform_id']
-#             sequence = row['mut_seq'] if is_mutant else row['wt_seq']
-#             embedding = extract_full_embedding(sequence, tokenizer, model, device)
-            
-#             if is_mutant:
-#                 mut_str = row['mutation_str']
-#                 if isoform_id not in embedding_dict:
-#                     embedding_dict[isoform_id] = {}
-#                 embedding_dict[isoform_id][mut_str] = embedding
-#             else:
-#                 embedding_dict[isoform_id] = embedding
-                
-#         except Exception as e:
-#             logger.error(f"Error processing row {idx}: {str(e)}")
-#             skipped_count += 1
+#     sequences = df['mut_seq' if is_mutant else 'wt_seq'].tolist()
+#     isoform_ids = df['isoform_id'].tolist()
     
-#     logger.info(f"Skipped {skipped_count} rows due to errors or NaN values")
+#     if is_mutant:
+#         mutation_strs = df['mutation_str'].tolist()
+    
+#     for i in tqdm(range(0, len(sequences), batch_size), desc="Processing batches"):
+#         batch_sequences = sequences[i:i+batch_size]
+#         batch_isoform_ids = isoform_ids[i:i+batch_size]
+        
+#         try:
+#             batch_embeddings = extract_embeddings(batch_sequences, tokenizer, model, device, batch_size)
+            
+#             for j, embedding in enumerate(batch_embeddings):
+#                 isoform_id = batch_isoform_ids[j]
+                
+#                 if is_mutant:
+#                     mut_str = mutation_strs[i+j]
+#                     if isoform_id not in embedding_dict:
+#                         embedding_dict[isoform_id] = {}
+#                     embedding_dict[isoform_id][mut_str] = embedding
+#                 else:
+#                     embedding_dict[isoform_id] = embedding
+                    
+#         except Exception as e:
+#             logger.error(f"Error processing batch starting at index {i}: {str(e)}")
+#             skipped_count += len(batch_sequences)
+    
+#     logger.info(f"Skipped {skipped_count} sequences due to errors")
 
 #     return embedding_dict
 
-import torch
-from tqdm import tqdm
-
-def extract_embeddings(sequences, tokenizer, model, device, batch_size=32):
-    embeddings = []
-    for i in range(0, len(sequences), batch_size):
-        batch = sequences[i:i+batch_size]
-        inputs = tokenizer(batch, 
-                           return_tensors='pt', 
-                           max_length=1024,
-                           padding='max_length', 
-                           truncation=True)
-        
-        inputs = {k: v.to(device) for k, v in inputs.items()}
-        
-        with torch.no_grad():
-            outputs = model(**inputs)
-            last_hidden_states = outputs.last_hidden_state
-            attention_mask = inputs['attention_mask']
-        
-        embeddings.extend([
-            {
-                'last_hidden_states': lhs.cpu(),
-                'attention_mask': am.cpu()
-            }
-            for lhs, am in zip(last_hidden_states, attention_mask)
-        ])
+# def save_embeddings_to_zip(embedding_dict, output_file):
+#     with zipfile.ZipFile(output_file + '.zip', 'w', zipfile.ZIP_DEFLATED) as zf:
+#         buffer = io.BytesIO()
+#         torch.save(embedding_dict, buffer, _use_new_zipfile_serialization=False)
+#         zf.writestr('embeddings.pt', buffer.getvalue())
     
-    return embeddings
+#     logger.info(f"Saved {len(embedding_dict)} embeddings to {output_file}.zip")
 
-def process_embeddings(df, tokenizer, model, device, is_mutant=False, batch_size=32):
-    embedding_dict = {}
-    skipped_count = 0
+# def load_compressed_embeddings(file_path):
+#     with zipfile.ZipFile(file_path, 'r') as zf:
+#         with zf.open('embeddings.pt') as f:
+#             buffer = io.BytesIO(f.read())
+#             return torch.load(buffer)
+
+def apply_pooling(last_hidden_states, attention_mask, pooling_strategy='mean_max_cls'):
+    if pooling_strategy == 'mean_max_cls':
+        # 어텐션 마스크 확장
+        mask = attention_mask.unsqueeze(-1).expand(last_hidden_states.size()).float()
+        
+        # 마스킹된 임베딩
+        masked_embeddings = last_hidden_states * mask
+        
+        # Mean pooling
+        summed = torch.sum(masked_embeddings, dim=1)
+        counts = torch.clamp(mask.sum(dim=1), min=1e-9)
+        mean_pooled = summed / counts
+        
+        # Max pooling
+        masked_embeddings[mask == 0] = -1e9  # 패딩 위치에 매우 작은 값 할당
+        max_pooled, _ = torch.max(masked_embeddings, dim=1)
+        
+        # CLS 토큰
+        cls_token = last_hidden_states[:, 0, :]
+        
+        # Mean, Max, CLS 토큰 결합
+        final_embedding = torch.cat([mean_pooled, max_pooled, cls_token], dim=1)
+        
+    elif pooling_strategy == 'preserve_length':
+        # 시퀀스 길이를 유지하며 각 위치에 대해 Mean 및 Max 풀링 적용
+        mean_pooled = last_hidden_states.mean(dim=-1)  # Shape: (batch_size, seq_len)
+        max_pooled, _ = last_hidden_states.max(dim=-1)  # Shape: (batch_size, seq_len)
+        final_embedding = torch.cat([mean_pooled, max_pooled], dim=1)  # Shape: (batch_size, seq_len * 2)
+        
+    elif pooling_strategy == 'full':
+        # 전체 last_hidden_states 반환
+        final_embedding = last_hidden_states.view(last_hidden_states.size(0), -1)  # Flatten
+    else:
+        raise ValueError("Invalid pooling strategy")
     
+    return final_embedding.cpu().numpy()
+
+
+def process_embeddings(df, tokenizer, model, device, output_file, is_mutant=False, pooling_strategy='mean_max_cls', batch_size=32):
     sequences = df['mut_seq' if is_mutant else 'wt_seq'].tolist()
     isoform_ids = df['isoform_id'].tolist()
     
     if is_mutant:
         mutation_strs = df['mutation_str'].tolist()
     
+    # HDF5 파일 생성
+    h5f = h5py.File(output_file, 'a')
+    total_size = 0  # 저장된 데이터의 총 크기 추적
+    file_index = 1  # 파일 인덱스
+    h5f.close()  # 파일 초기화
+    
     for i in tqdm(range(0, len(sequences), batch_size), desc="Processing batches"):
         batch_sequences = sequences[i:i+batch_size]
         batch_isoform_ids = isoform_ids[i:i+batch_size]
         
+        if is_mutant:
+            batch_mutation_strs = mutation_strs[i:i+batch_size]
+        
         try:
-            batch_embeddings = extract_embeddings(batch_sequences, tokenizer, model, device, batch_size)
+            batch_embeddings = extract_embeddings(
+                batch_sequences, tokenizer, model, device, pooling_strategy, batch_size
+            )
+            batch_embeddings = np.array(batch_embeddings)
+            batch_size_in_bytes = batch_embeddings.nbytes
             
+            # 파일 크기 제한 체크
+            if total_size + batch_size_in_bytes > 10 * 1024 ** 3:  # 10GB 초과 시 새로운 파일 생성
+                h5f.close()
+                file_index += 1
+                output_file = f"{output_file_base}_{file_index}.h5"
+                h5f = h5py.File(output_file, 'a')
+                total_size = 0
+            
+            # HDF5 파일에 저장
             for j, embedding in enumerate(batch_embeddings):
-                isoform_id = batch_isoform_ids[j]
-                
                 if is_mutant:
-                    mut_str = mutation_strs[i+j]
-                    if isoform_id not in embedding_dict:
-                        embedding_dict[isoform_id] = {}
-                    embedding_dict[isoform_id][mut_str] = embedding
+                    key = f"{batch_isoform_ids[j]}_{batch_mutation_strs[j]}"
                 else:
-                    embedding_dict[isoform_id] = embedding
-                    
+                    key = batch_isoform_ids[j]
+                h5f.create_dataset(key, data=embedding, compression='gzip')
+                total_size += embedding.nbytes
+                
         except Exception as e:
             logger.error(f"Error processing batch starting at index {i}: {str(e)}")
-            skipped_count += len(batch_sequences)
     
-    logger.info(f"Skipped {skipped_count} sequences due to errors")
-
-    return embedding_dict
-
-def save_embeddings_to_zip(embedding_dict, output_file):
-    with zipfile.ZipFile(output_file + '.zip', 'w', zipfile.ZIP_DEFLATED) as zf:
-        buffer = io.BytesIO()
-        torch.save(embedding_dict, buffer, _use_new_zipfile_serialization=False)
-        zf.writestr('embeddings.pt', buffer.getvalue())
-    
-    logger.info(f"Saved {len(embedding_dict)} embeddings to {output_file}.zip")
-
-def load_compressed_embeddings(file_path):
-    with zipfile.ZipFile(file_path, 'r') as zf:
-        with zf.open('embeddings.pt') as f:
-            buffer = io.BytesIO(f.read())
-            return torch.load(buffer)
+    h5f.close()
+    logger.info(f"Embeddings saved to {output_file}")

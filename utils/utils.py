@@ -13,9 +13,14 @@ def load_logger():
     logger = logging.getLogger(__name__)
     return logger
 
-def load_full_feature_data():
-    mut_seq_filepath = 'data/processed/mutant_seq_unique.csv'
-    mut_encoding_filepath = 'data/processed/train_mutation_encoding.csv'
+def load_full_feature_data(train=True):
+    if train:
+        mut_seq_filepath = 'data/processed/train/mutant_seq_unique.csv'
+        mut_encoding_filepath = 'data/processed/train/train_mutation_encoding.csv'
+    else:
+        mut_seq_filepath = 'data/processed/test/mutant_seq_unique.csv'
+        mut_encoding_filepath = 'data/processed/test/train_mutation_encoding.csv'
+
     mut_seq_df = pd.read_csv(mut_seq_filepath)
     mut_encoding_df = pd.read_csv(mut_encoding_filepath)
 

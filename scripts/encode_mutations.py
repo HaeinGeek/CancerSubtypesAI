@@ -3,7 +3,7 @@ import os
 import pandas as pd
 import numpy as np
 
-# Add the project root directory to sys.path
+# 프로젝트 루트 디렉토리를 sys.path에 추가
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(project_root)
 

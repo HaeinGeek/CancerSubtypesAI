@@ -3,6 +3,8 @@ from tqdm import tqdm
 import logging
 from transformers import BertTokenizer, BertModel
 import torch
+import zipfile
+import io
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -54,8 +56,7 @@ def extract_full_embedding(sequence, tokenizer, model, device):
         logger.error(f"Sequence causing error: {sequence}")
         raise
 
-# Function to process and save embeddings
-def process_and_save_embeddings(df, tokenizer, model, device, output_file, is_mutant=False):
+def process_embeddings(df, tokenizer, model, device, is_mutant=False):
     embedding_dict = {}
     skipped_count = 0
     
@@ -77,8 +78,20 @@ def process_and_save_embeddings(df, tokenizer, model, device, output_file, is_mu
             logger.error(f"Error processing row {idx}: {str(e)}")
             skipped_count += 1
     
-    torch.save(embedding_dict, output_file)
-    logger.info(f"Saved {len(embedding_dict)} embeddings to {output_file}")
     logger.info(f"Skipped {skipped_count} rows due to errors or NaN values")
 
     return embedding_dict
+
+def save_embeddings_to_zip(embedding_dict, output_file):
+    with zipfile.ZipFile(output_file + '.zip', 'w', zipfile.ZIP_DEFLATED) as zf:
+        buffer = io.BytesIO()
+        torch.save(embedding_dict, buffer, _use_new_zipfile_serialization=False)
+        zf.writestr('embeddings.pt', buffer.getvalue())
+    
+    logger.info(f"Saved {len(embedding_dict)} embeddings to {output_file}.zip")
+
+def load_compressed_embeddings(file_path):
+    with zipfile.ZipFile(file_path, 'r') as zf:
+        with zf.open('embeddings.pt') as f:
+            buffer = io.BytesIO(f.read())
+            return torch.load(buffer)

@@ -28,7 +28,7 @@ def load_full_feature_data(train=True):
     for column in columns:
         mut_encoding_df[column] = mut_encoding_df[column].apply(ast.literal_eval)
 
-    mutation_df = mut_encoding_df.merge(mut_seq_df, on=['gene','mutation_str', 'isoform_id'], how='left')
+    mutation_df = mut_encoding_df.merge(mut_seq_df, on=['gene','mutation_str'], how='left')
 
     # 계산 불가 -> staus_prot = 1
     mutation_df['status_prot'] = 0

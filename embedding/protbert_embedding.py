@@ -200,8 +200,8 @@ def process_embeddings(df, tokenizer, model, device, output_file_base, is_mutant
             temp_file_size = os.path.getsize('temp.h5')
 
             # 파일 크기 제한 체크
-            if total_size + temp_file_size > 10 * 1024 ** 3:  # 10GB 초과 시 새로운 파일 생성
-            # if total_size + temp_file_size > 100 * 1024 ** 2:  # 100MB 초과 시 새로운 파일 생성
+            # if total_size + temp_file_size > 10 * 1024 ** 3:  # 10GB 초과 시 새로운 파일 생성
+            if total_size + temp_file_size > 100 * 1024 ** 2:  # 100MB 초과 시 새로운 파일 생성
                 h5f.close()
                 os.remove('temp.h5')  # 임시 파일 삭제
                 file_index += 1

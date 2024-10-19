@@ -19,7 +19,7 @@ def load_full_feature_data(train=True):
         mut_encoding_filepath = 'data/processed/train/train_mutation_encoding.csv'
     else:
         mut_seq_filepath = 'data/processed/test/mutant_seq_unique.csv'
-        mut_encoding_filepath = 'data/processed/test/train_mutation_encoding.csv'
+        mut_encoding_filepath = 'data/processed/test/test_mutation_encoding.csv'
 
     mut_seq_df = pd.read_csv(mut_seq_filepath)
     mut_encoding_df = pd.read_csv(mut_encoding_filepath)

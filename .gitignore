@@ -4,6 +4,7 @@ data/processed/train/mut_embedding_tensor.pt
 data/processed/embeddings/wt_embedding_tensor.pt
 data/processed/embeddings/mut_embedding_tensor.pt
 data/processed/embeddings/mut_embeddings_mean_max_cls_1.h5
+data/processed/embeddings/mut_embeddings_mean_max_cls_add_1.h5
 
 # 기타파일
 data/processed/mutant_seq_test.csv

@@ -1,19 +1,8 @@
 # 대용량파일
-data/processed/train/mutant_seq_unique.csv
-data/processed/train/mut_embedding_tensor.pt
-data/processed/embeddings/wt_embedding_tensor.pt
-data/processed/embeddings/mut_embedding_tensor.pt
-data/processed/embeddings/mut_embeddings_mean_max_cls_1.h5
-data/processed/embeddings/mut_embeddings_mean_max_cls_add_1.h5
-data/processed/train/input_data.json
-data/processed/test/input_data.json
-data/processed/embeddings/
-data/processed/protein_sequences/
-data/processed/saac/
+data/
 
 # 기타파일
-data/processed/mutant_seq_test.csv
-scripts/protbert_embedding copy.py
+
 
 # 파이캐시
 __pycache__/

@@ -1,4 +1,5 @@
-# 대용량파일
+# 데이터 파일
+data/EDA
 data/processed/train/
 data/processed/test/
 data/processed/embeddings/
@@ -6,7 +7,7 @@ data/processed/protein_sequences/*
 data/processed/saac/*
 data/processed/gene_info.csv
 
-# 기타파일
+# 기타 파일
 ipynb/ignore/
 logs/
 checkpoints/

@@ -3,9 +3,8 @@ from embedding.protbert_embedding import (
     load_protbert,
     apply_pooling,
     extract_embeddings,
-    process_embeddings,
-    # save_embeddings_to_zip,
-    # load_compressed_embeddings
+    get_existing_keys,
+    process_embeddings
 )
 
 __all__ = [
@@ -13,7 +12,6 @@ __all__ = [
     'load_protbert',
     'apply_pooling',
     'extract_embeddings',
-    'process_embeddings',
-    # "save_embeddings_to_zip",
-    # 'load_compressed_embeddings'
+    'get_existing_keys',
+    'process_embeddings'
     ]

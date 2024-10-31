@@ -2,7 +2,7 @@ import re
 from collections import Counter
 import numpy as np
 import pandas as pd
-from tqdm import tqdm
+from tqdm.auto import tqdm
 
 def select_longest_isoform(isoform_sequences, db_name):
     """

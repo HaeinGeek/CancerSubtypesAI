@@ -37,3 +37,49 @@ def load_full_feature_data(train=True):
     mutation_df.loc[(mutation_df['isoform_id'].isna()), 'status_prot'] = 1
 
     return mutation_df
+
+def load_full_seq_data():
+    seq_train = load_full_feature_data()
+    seq_test = load_full_feature_data(train=False)
+
+    mutation_df = pd.concat([seq_train, seq_test]).drop_duplicates(subset=['gene', 'mutation_str'])
+    mutation_df.reset_index(drop=True, inplace=True)
+
+    wt_seq_df = mutation_df.loc[(mutation_df.mutation_str == 'WT'),['gene', 'mutation_str', 'type','isoform_id', 'wt_seq']]
+    wt_seq_df.columns = ['gene', 'mutation_str', 'type','isoform_id', 'seq']
+    mut_seq_df = mutation_df.loc[(mutation_df.mutation_str != 'WT'),['gene', 'mutation_str', 'type', 'isoform_id', 'mut_seq']]
+    mut_seq_df.columns = ['gene', 'mutation_str', 'type','isoform_id', 'seq']
+
+    seq_df = pd.concat([wt_seq_df, mut_seq_df])
+    seq_df = seq_df.drop_duplicates(subset=['gene', 'mutation_str'])
+
+    return seq_df
+
+def download_file(file_path):
+    from google.colab import files
+    import os
+    """
+    Google Colab에서 특정 경로의 파일을 다운로드합니다.
+
+    :param file_path: 다운로드할 파일의 경로
+    """
+    if os.path.exists(file_path):
+        files.download(file_path)
+        # print(f"{file_path} 파일이 다운로드되었습니다.")
+    else:
+        print(f'Error: "{file_path}" not found.')
+
+def txt_to_list(file_path):
+    # 파일에서 읽어서 리스트에 저장
+    li = []
+    with open(file_path, 'r') as f:
+        # 각 줄을 읽어서 리스트에 추가
+        li = [line.strip() for line in f]
+        # 또는
+        # for line in f:
+        #     high_freq_genes.append(line.strip())
+
+    print(f"Length of list: {len(li)}")
+    print(f"First 5 components: {li[:5]}")
+
+    return li

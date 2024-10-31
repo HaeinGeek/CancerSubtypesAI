@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 import torch
-from tqdm import tqdm
+from tqdm.auto import tqdm
 import logging
 from transformers import BertTokenizer, BertModel
 import h5py

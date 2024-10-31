@@ -16,8 +16,10 @@ checkpoints/
 __pycache__/
 
 # OS별 캐시파일
-.DS_Store  # macOS
-Thumbs.db  # Windows
+# macOS
+.DS_Store
+# Windows
+Thumbs.db
 
 # 특정 확장자 파일
 *.pyc

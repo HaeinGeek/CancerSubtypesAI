@@ -7,6 +7,9 @@ data/processed/saac/*
 data/processed/gene_info.csv
 
 # 기타파일
+ipynb/ignore/
+logs/
+checkpoints/
 
 # 파이캐시
 __pycache__/
@@ -19,12 +22,9 @@ Thumbs.db  # Windows
 *.pyc
 *.log
 *.tmp
-*.ipynb
 *.xlsx
 *.zip
 
 # 포함할 파일
-!ipynb/single_aa_embedding_model.ipynb
-!ipynb/protBERT_embedding_*.ipynb
 !data/processed/protein_sequences/genes_*.txt
 !data/processed/saac/high_freq_genes.txt

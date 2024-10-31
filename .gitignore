@@ -21,6 +21,7 @@ Thumbs.db  # Windows
 *.tmp
 *.ipynb
 *.xlsx
+*.zip
 
 # 포함할 파일
 !ipynb/single_aa_embedding_model.ipynb

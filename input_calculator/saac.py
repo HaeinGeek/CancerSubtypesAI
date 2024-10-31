@@ -1,10 +1,5 @@
-# import os
-# import glob
 from tqdm.auto import tqdm
-# import numpy as np
 import pandas as pd
-# from collections import defaultdict
-
 
 aa_codes = ['A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 
             'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y', 'fs']
@@ -57,6 +52,12 @@ def calculate_saac(seq_df, cutoff_ratio=0.2):
                 result_df.loc[index, f'c_term_{code}'] = float((c_term_seq.count(code) / len(c_term_seq))*100) if len(c_term_seq) > 0 else 0.0
     
     return result_df
+
+
+# import os
+# import glob
+# import numpy as np
+# from collections import defaultdict
 
 # def get_saac_features(input_df, saac_df, gene_list, output_dir, is_train=True):
 #     # 디렉토리가 존재하는지 확인하고 없으면 생성

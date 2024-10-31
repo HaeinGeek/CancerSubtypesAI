@@ -1,8 +1,12 @@
 # 대용량파일
-data/
+data/processed/train/
+data/processed/test/
+data/processed/embeddings/
+data/processed/protein_sequences/*
+data/processed/saac/*
+data/processed/gene_info.csv
 
 # 기타파일
-
 
 # 파이캐시
 __pycache__/
@@ -20,5 +24,6 @@ Thumbs.db  # Windows
 
 # 포함할 파일
 !ipynb/single_aa_embedding_model.ipynb
-!ipynb/input_data_processing.ipynb
-!ipynb/extract_SAAC_features.ipynb
+!ipynb/protBERT_embedding_*.ipynb
+!data/processed/protein_sequences/genes_*.txt
+!data/processed/saac/high_freq_genes.txt

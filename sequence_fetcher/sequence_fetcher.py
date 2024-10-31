@@ -1,5 +1,5 @@
 import pandas as pd
-from tqdm import tqdm
+from tqdm.auto import tqdm
 
 from sequence_fetcher.uniprot_api import UniProtAPI
 from sequence_fetcher.ncbi_api import NCBIAPI

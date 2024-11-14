@@ -10,8 +10,13 @@ import multiprocessing as mp
 from tqdm.auto import tqdm
 import logging
 
-# 로깅 설정
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+# 로깅 설정 - 로그 파일을 'my_log.log'에 저장
+logging.basicConfig(
+    level=logging.INFO, 
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    filename='logs/fetch_msa.log',  # 로그 파일 이름 지정
+    filemode='w'  # 파일 모드 'a'는 추가 모드 ('w'는 덮어쓰기 모드)
+)
 
 class GeneWiseBLASTMSA:
     def __init__(self, input_df, output_dir, email, api_key=None, n_jobs=1):

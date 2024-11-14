@@ -5,6 +5,7 @@ data/processed/test/
 data/processed/embeddings/
 data/processed/protein_sequences/*
 data/processed/saac/*
+data/processed/msa/
 data/processed/gene_info.csv
 
 # 기타 파일

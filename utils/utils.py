@@ -83,3 +83,19 @@ def txt_to_list(file_path):
     print(f"First 5 components: {li[:5]}")
 
     return li
+
+def list_to_txt(li, file_path):
+    """
+    리스트의 각 항목을 텍스트 파일의 각 줄에 저장하는 함수
+    
+    Parameters:
+    li (list): 저장할 리스트
+    file_path (str): 저장할 파일 경로
+    """
+    # 파일을 쓰기 모드로 열고 리스트의 각 항목을 줄별로 저장
+    with open(file_path, 'w') as f:
+        for item in li:
+            f.write(str(item) + '\n')
+    
+    print(f"File saved: {file_path}")
+    print(f"Length of list: {len(li)}")

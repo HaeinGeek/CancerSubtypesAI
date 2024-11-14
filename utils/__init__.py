@@ -4,7 +4,8 @@ from utils.utils import(
     load_full_feature_data,
     load_full_seq_data,
     download_file,
-    txt_to_list
+    txt_to_list,
+    list_to_txt
 )
 
 __all__ = [
@@ -13,5 +14,6 @@ __all__ = [
     'load_full_feature_data',
     'load_full_seq_data',
     'download_file',
-    'txt_to_list'
+    'txt_to_list',
+    'list_to_txt'
 ]
